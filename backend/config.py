@@ -1,6 +1,6 @@
 import os
 
-NUM_VARIANTS = 4
+NUM_VARIANTS = int(os.environ.get("NUM_VARIANTS", "1"))
 NUM_VARIANTS_VIDEO = 2
 
 # LLM-related
