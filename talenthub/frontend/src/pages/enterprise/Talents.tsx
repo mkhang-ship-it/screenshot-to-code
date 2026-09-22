@@ -52,12 +52,12 @@ export default function Talents() {
       />
 
       <Card className="mb-5">
-        <div className="flex items-center gap-2 text-xs text-slate-400 mb-3 uppercase tracking-wider">
+        <div className="flex items-center gap-2 text-xs text-muted-light mb-3 uppercase tracking-wider">
           <Filter size={13} /> Bộ lọc
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
-          <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-3">
-            <Search size={15} className="text-slate-400" />
+          <div className="flex items-center gap-2 rounded-xl border border-line px-3">
+            <Search size={15} className="text-muted-light" />
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
@@ -69,9 +69,9 @@ export default function Talents() {
             value={classFilter}
             onChange={(e) => setClassFilter(e.target.value)}
             placeholder="Lớp (VD: 11B1)"
-            className="px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none"
+            className="px-3 py-2 rounded-xl border border-line text-sm outline-none"
           />
-          <select value={grade} onChange={(e) => setGrade(e.target.value)} className="px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white">
+          <select value={grade} onChange={(e) => setGrade(e.target.value)} className="px-3 py-2 rounded-xl border border-line text-sm bg-white">
             <option value="">Tất cả khối</option>
             {[10, 11, 12].map((g) => (
               <option key={g} value={g}>
@@ -79,7 +79,7 @@ export default function Talents() {
               </option>
             ))}
           </select>
-          <select value={field} onChange={(e) => setField(e.target.value)} className="px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white">
+          <select value={field} onChange={(e) => setField(e.target.value)} className="px-3 py-2 rounded-xl border border-line text-sm bg-white">
             <option value="">Tất cả lĩnh vực</option>
             <option value="ky_thuat">Kỹ thuật</option>
             <option value="nghe_thuat">Nghệ thuật</option>
@@ -88,7 +88,7 @@ export default function Talents() {
             <option value="hoc_thuat">Học thuật</option>
             <option value="sang_tao">Sáng tạo</option>
           </select>
-          <select value={minScore} onChange={(e) => setMinScore(e.target.value)} className="px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white">
+          <select value={minScore} onChange={(e) => setMinScore(e.target.value)} className="px-3 py-2 rounded-xl border border-line text-sm bg-white">
             <option value="">Điểm năng lực ≥ bất kỳ</option>
             <option value="60">≥ 60</option>
             <option value="70">≥ 70</option>
@@ -97,37 +97,48 @@ export default function Talents() {
         </div>
       </Card>
 
-      <div className="mb-4 text-sm text-slate-500">{data.length} hồ sơ phù hợp</div>
+      <div className="mb-4 text-sm text-muted">{data.length} hồ sơ phù hợp</div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {data.length === 0 && (
           <Card className="md:col-span-2 lg:col-span-3">
-            <p className="text-sm text-slate-500 text-center py-6">Không tìm thấy hồ sơ phù hợp với bộ lọc.</p>
+            <p className="text-sm text-muted text-center py-6">Không tìm thấy hồ sơ phù hợp với bộ lọc.</p>
           </Card>
         )}
         {data.map((t) => (
           <Card key={t.id}>
             <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center text-lg font-bold shrink-0">
+              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-rose-500 to-pink-600 text-white flex items-center justify-center text-lg font-bold shrink-0">
                 {t.full_name.charAt(0)}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-semibold text-slate-900 truncate">{t.full_name}</div>
-                <div className="text-xs text-slate-400">
+                <div className="font-bold text-ink truncate">{t.full_name}</div>
+                <div className="text-xs text-muted-light">
                   {t.class_name} · Khối {t.grade}
                 </div>
               </div>
-              <div className="text-right">
-                <div className="text-lg font-bold text-amber-600">{t.talent_score}</div>
-                <div className="text-[10px] text-slate-400">điểm</div>
-              </div>
+              <div className="text-lg font-extrabold text-pink-600">{t.talent_score}</div>
             </div>
-            <div className="mt-3 text-xs text-slate-500 line-clamp-2">{t.interests ?? "Chưa cập nhật sở thích"}</div>
-            <div className="mt-3 flex items-center justify-between">
-              <span className="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">{t.experience_hours}h trải nghiệm</span>
-              <Link to={`/passport/${t.id}`} className="text-xs text-blue-600 hover:underline">
-                Xem passport →
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {(t.interests ?? "").split(",").map((s) => s.trim()).filter(Boolean).slice(0, 3).map((s, i) => (
+                <span key={i} className="text-[11px] px-2 py-0.5 rounded-full bg-canvas-soft text-muted font-medium">
+                  {s}
+                </span>
+              ))}
+            </div>
+            <div className="mt-2 text-xs text-muted">
+              {t.experience_hours}h trải nghiệm · Sẵn sàng thực tập
+            </div>
+            <div className="mt-3 flex gap-2">
+              <Link
+                to={`/passport/${t.id}`}
+                className="flex-1 text-center text-xs px-3 py-2 rounded-full border border-line font-semibold text-ink hover:bg-canvas-soft"
+              >
+                Xem hồ sơ
               </Link>
+              <button className="flex-1 text-xs px-3 py-2 rounded-full cta-gradient text-white font-semibold">
+                Liên hệ
+              </button>
             </div>
           </Card>
         ))}

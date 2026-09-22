@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { CalendarDays, Search } from "lucide-react";
+import { CalendarDays, Clock, MapPin, Search, Users } from "lucide-react";
 import { get, post } from "../../api/client";
 import { Card, ErrorBox, Loading, PageHeader } from "../../components/ui";
 
@@ -22,6 +22,13 @@ const FIELD_NAMES: Record<string, string> = {
   hoc_thuat: "Học thuật",
   sang_tao: "Sáng tạo",
 };
+
+/** Banner card theo lĩnh vực (slide 13): Kỹ thuật/Công nghệ = cam, còn lại = hồng-tím */
+function fieldBanner(field: string): string {
+  return field === "ky_thuat" || field === "hoc_thuat"
+    ? "field-banner-tech"
+    : "hero-gradient";
+}
 
 export default function Activities() {
   const [data, setData] = useState<Activity[] | null>(null);
@@ -55,75 +62,100 @@ export default function Activities() {
   if (error) return <ErrorBox message={error} />;
   if (!data) return <Loading />;
 
+  const filters = ["", ...Object.keys(FIELD_NAMES)];
+
   return (
     <div>
-      <PageHeader
-        title="Hoạt động & Sân chơi"
-        subtitle="Săn slot các lab, câu lạc bộ, workshop và cuộc thi hấp dẫn — phân loại theo lĩnh vực (slide 13)."
-      />
-
-      <div className="flex flex-wrap gap-3 mb-6">
-        <div className="flex rounded-xl bg-white border border-slate-200 overflow-hidden items-center px-3">
-          <Search size={15} className="text-slate-400" />
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Tìm hoạt động..."
-            className="px-2 py-2 text-sm outline-none w-52"
-          />
+      <div className="flex flex-wrap items-end justify-between gap-3 mb-6">
+        <PageHeader
+          title="Đăng ký hoạt động"
+          subtitle="Săn slot các lab, câu lạc bộ, cuộc thi đang mở."
+        />
+        <div className="flex flex-wrap gap-2">
+          {filters.map((f) => (
+            <button
+              key={f}
+              onClick={() => setField(f)}
+              className={`text-xs px-3.5 py-1.5 rounded-full font-semibold border ${
+                field === f
+                  ? "bg-ink text-white border-ink"
+                  : "bg-white text-muted border-line hover:border-portal"
+              }`}
+            >
+              {f === "" ? "Tất cả" : FIELD_NAMES[f]}
+            </button>
+          ))}
         </div>
-        <button
-          onClick={() => setField("")}
-          className={`text-sm px-3 py-2 rounded-lg border ${
-            !field ? "bg-blue-600 text-white border-blue-600" : "bg-white text-slate-600 border-slate-200"
-          }`}
-        >
-          Tất cả
-        </button>
-        {Object.entries(FIELD_NAMES).map(([key, name]) => (
-          <button
-            key={key}
-            onClick={() => setField(field === key ? "" : key)}
-            className={`text-sm px-3 py-2 rounded-lg border ${
-              field === key ? "bg-blue-600 text-white border-blue-600" : "bg-white text-slate-600 border-slate-200"
-            }`}
-          >
-            {name}
-          </button>
-        ))}
+      </div>
+
+      <div className="flex rounded-xl bg-white border border-line overflow-hidden items-center px-3 mb-6 max-w-sm">
+        <Search size={15} className="text-muted-light" />
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Tìm hoạt động..."
+          className="px-2 py-2 text-sm outline-none w-full bg-transparent"
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {data.map((a) => (
-          <Card key={a.id}>
-            <div className="flex items-start justify-between mb-2">
-              <span className="text-[11px] px-2 py-0.5 rounded-full bg-violet-50 text-violet-700 font-medium">
-                {FIELD_NAMES[a.field] ?? a.field}
-              </span>
-              <span
-                className={`text-[11px] px-2 py-0.5 rounded-full ${
-                  a.slots_left > 0 ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600"
-                }`}
-              >
-                {a.slots_left > 0 ? `Còn ${a.slots_left} chỗ` : "Hết chỗ"}
-              </span>
+        {data.map((a) => {
+          const taken = Math.max(0, a.capacity - a.slots_left);
+          const pct = a.capacity > 0 ? Math.round((taken / a.capacity) * 100) : 0;
+          return (
+            <div key={a.id} className="rounded-2xl border border-line bg-white overflow-hidden shadow-soft">
+              {/* Banner màu theo lĩnh vực (slide 13) */}
+              <div className={`${fieldBanner(a.field)} px-4 pt-3 pb-8`}>
+                <span className="text-[11px] px-2.5 py-1 rounded-full bg-white/25 text-white font-medium">
+                  {FIELD_NAMES[a.field] ?? a.field}
+                </span>
+              </div>
+              <div className="p-4">
+                <h3 className="font-bold text-ink">{a.title}</h3>
+                <div className="mt-2 space-y-1 text-xs text-muted">
+                  <div className="flex items-center gap-1.5">
+                    <Clock size={13} /> {a.start_date ?? "Sắp mở"}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <MapPin size={13} /> {a.description ?? "Địa điểm cập nhật sau"}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Users size={13} /> {taken}/{a.capacity}
+                    <span className="ml-auto font-semibold text-emerald-600">
+                      {a.slots_left > 0 ? `Còn ${a.slots_left} chỗ` : "Hết chỗ"}
+                    </span>
+                  </div>
+                </div>
+                <div className="mt-2 h-1.5 rounded-full bg-canvas-soft overflow-hidden">
+                  <div className="h-full rounded-full hero-gradient" style={{ width: `${pct}%` }} />
+                </div>
+                <button
+                  onClick={() => register(a.id)}
+                  disabled={a.registered || a.slots_left <= 0}
+                  className="mt-3 w-full text-sm py-2 rounded-full font-semibold text-white cta-gradient disabled:opacity-40"
+                >
+                  {a.registered ? "Đã đăng ký ✓" : "Đăng ký ngay"}
+                </button>
+              </div>
             </div>
-            <h3 className="font-semibold text-slate-900">{a.title}</h3>
-            <p className="mt-1 text-sm text-slate-500 line-clamp-2">{a.description}</p>
-            <div className="mt-3 flex items-center gap-1.5 text-xs text-slate-400">
-              <CalendarDays size={13} />
-              {a.start_date ?? "Sắp mở"}
-            </div>
-            <button
-              onClick={() => register(a.id)}
-              disabled={a.registered || a.slots_left <= 0}
-              className="mt-4 w-full text-sm py-2 rounded-xl font-medium bg-blue-600 text-white hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400"
-            >
-              {a.registered ? "Đã đăng ký ✓" : "Đăng ký ngay"}
-            </button>
-          </Card>
-        ))}
+          );
+        })}
       </div>
+
+      {/* Banner tham gia (slide 13) */}
+      <Card className="mt-6">
+        <div className="flex items-center gap-4">
+          <span className="h-12 w-12 shrink-0 rounded-full bg-gradient-to-br from-indigo-600 to-purple-700 text-white flex items-center justify-center">
+            <CalendarDays size={22} />
+          </span>
+          <div>
+            <div className="font-bold text-ink">Tham gia – Trải nghiệm – Phát triển</div>
+            <p className="text-sm text-muted">
+              Tham gia các hoạt động phù hợp với sở thích để nâng cao kỹ năng mỗi ngày.
+            </p>
+          </div>
+        </div>
+      </Card>
     </div>
   );
 }

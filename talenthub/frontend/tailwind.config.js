@@ -4,18 +4,42 @@ export default {
   theme: {
     extend: {
       colors: {
+        canvas: "var(--canvas)",
+        "canvas-soft": "var(--canvas-soft)",
+        surface: "var(--surface)",
+        ink: "var(--ink)",
+        "ink-soft": "var(--ink-soft)",
+        muted: "var(--muted)",
+        "muted-light": "var(--muted-light)",
+        line: "var(--line)",
+        "line-strong": "var(--line-strong)",
         brand: {
-          50: "#eff6ff",
-          100: "#dbeafe",
-          200: "#bfdbfe",
-          300: "#93c5fd",
-          400: "#60a5fa",
-          500: "#3b82f6",
-          600: "#2563eb",
-          700: "#1d4ed8",
-          800: "#1e40af",
-          900: "#1e3a8a",
+          DEFAULT: "var(--brand)",
+          dark: "var(--brand-dark)",
+          soft: "var(--brand-soft)",
         },
+        portal: {
+          DEFAULT: "var(--portal)",
+          soft: "var(--portal-soft)",
+          dark: "var(--portal-dark)",
+        },
+      },
+      fontFamily: {
+        sans: [
+          '"Be Vietnam Pro"',
+          "-apple-system",
+          "BlinkMacSystemFont",
+          '"Segoe UI"',
+          "system-ui",
+          "sans-serif",
+        ],
+      },
+      boxShadow: {
+        soft: "var(--shadow-soft)",
+        lift: "var(--shadow-lift)",
+      },
+      borderRadius: {
+        xl: "1.1rem",
       },
     },
   },

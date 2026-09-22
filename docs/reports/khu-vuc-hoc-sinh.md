@@ -54,3 +54,45 @@ Slide đối chiếu: `docs/slide-ocr/ocr_slide_09..19.txt` (bản OCR; tên fil
 2. Auth học sinh (thay `student_id=1` mặc định) trước khi mở check-in/đăng ký production.
 3. Công thức xếp hạng khối đã có (`talent_score` trong cùng `grade`) — chốt có hiển thị công khai toàn khối không.
 4. Có cần trang Thống kê riêng cổng HS (slide 9 liệt kê "Thống kê") hay Dashboard hiện tại đã đủ.
+
+---
+
+## 6. Design v2 Verify — Portal Accent & Canvas
+
+**Target spec**: accent `#A1458F` (portal), warm cream canvas `#FDF7F1`.
+
+**Date**: 2026-09-22
+
+### 6.1 File changes
+
+`git diff --stat HEAD -- src/pages/student/` → **7 files changed**, 111 insertions(+), 111 deletions(-):
+
+- `Activities.tsx`
+- `Badges.tsx`
+- `Checkin.tsx`
+- `Dashboard.tsx`
+- `Discover.tsx`
+- `Profile.tsx`
+- `Roadmap.tsx`
+
+### 6.2 Portal token usage
+
+`grep -rn 'text-portal\|bg-portal-soft' src/pages/student/` → **14 occurrences** of portal design tokens found across the student pages. Confirms consistent use of the `#A1458F` accent palette.
+
+### 6.3 Leftover blue-class check
+
+`grep -rn 'text-blue-\|bg-blue-\|from-blue-' src/pages/student/` → **0 matches**. No leftover blue classes detected. All old blue color references have been replaced with portal tokens.
+
+### 6.4 Build result
+
+`cd talenthub/frontend && pnpm build` → **PASS** ✓ (`built in 11.14s`, `dist/` generated successfully with CSS 26.11 kB, JS 280.66 kB).
+
+### 6.5 Design v2 verdict
+
+| Check | Result |
+|---|---|
+| Portal accent (`#A1458F`) tokens present | ✅ 14 usages |
+| Leftover blue classes | ✅ None |
+| Build | ✅ Pass |
+
+**Overall**: Student portal pages match design v2 — portal accent (`#A1458F`) is consistently applied via `text-portal` / `bg-portal-soft` tokens, no stray blue classes remain, and the build succeeds cleanly.

@@ -47,10 +47,10 @@ export default function Students() {
     <div>
       <PageHeader
         title="Học viên của tôi"
-        subtitle={`${data.total} học viên từ các sân chơi thầy/cô phụ trách — điểm năng lực, giờ trải nghiệm và nhận xét (slide 23).`}
+        subtitle={`${data.total} học viên đang theo dõi các sân chơi bạn phụ trách (slide 23).`}
         actions={
-          <div className="flex items-center gap-2 rounded-xl bg-white border border-slate-200 px-3 py-2">
-            <Search size={15} className="text-slate-400" />
+          <div className="flex items-center gap-2 rounded-xl bg-white border border-line px-3 py-2">
+            <Search size={15} className="text-muted-light" />
             <input
               value={params.get("q") ?? ""}
               onChange={(e) => {
@@ -69,50 +69,40 @@ export default function Students() {
       <Card className="overflow-hidden p-0">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-left text-slate-400 text-xs uppercase tracking-wider border-b border-slate-200 bg-slate-50/60">
+            <tr className="text-left text-muted-light text-xs uppercase tracking-wider border-b border-line bg-canvas-soft/60">
               <th className="px-5 py-3">Học viên</th>
               <th className="px-5 py-3">Lớp</th>
-              <th className="px-5 py-3 text-center">Sân chơi tham gia</th>
-              <th className="px-5 py-3 text-center">Giờ trải nghiệm</th>
               <th className="px-5 py-3 text-center">Điểm năng lực</th>
+              <th className="px-5 py-3 text-center">Giờ trải nghiệm</th>
+              <th className="px-5 py-3 text-center">Sân chơi</th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-5 py-8 text-center text-slate-400">
+                <td colSpan={5} className="px-5 py-8 text-center text-muted-light">
                   Không tìm thấy học viên phù hợp.
                 </td>
               </tr>
             )}
             {filtered.map((s) => (
-              <tr key={s.student_id} className="border-b border-slate-100 hover:bg-slate-50/60">
+              <tr key={s.student_id} className="border-b border-line hover:bg-canvas-soft/60">
                 <td className="px-5 py-3">
                   <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center text-sm font-bold shrink-0">
+                    <div className="h-9 w-9 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 text-white flex items-center justify-center text-sm font-bold shrink-0">
                       {s.full_name.charAt(0)}
                     </div>
-                    <span className="font-medium text-slate-800">{s.full_name}</span>
+                    <span className="font-semibold text-ink">{s.full_name}</span>
                   </div>
                 </td>
-                <td className="px-5 py-3 text-slate-500">{s.class_name}</td>
+                <td className="px-5 py-3 text-muted">{s.class_name}</td>
                 <td className="px-5 py-3 text-center">
-                  <span className="text-xs px-2.5 py-1 rounded-full bg-violet-50 text-violet-700">
-                    {s.activity_count} sân chơi
-                  </span>
+                  <span className="text-base font-extrabold text-pink-600">{s.talent_score}</span>
                 </td>
-                <td className="px-5 py-3 text-center font-medium">{s.hours}h</td>
+                <td className="px-5 py-3 text-center font-medium text-ink">{s.hours}h</td>
                 <td className="px-5 py-3 text-center">
-                  <span
-                    className={`text-xs px-2.5 py-1 rounded-full font-semibold ${
-                      s.talent_score >= 80
-                        ? "bg-amber-50 text-amber-700"
-                        : s.talent_score >= 70
-                          ? "bg-emerald-50 text-emerald-700"
-                          : "bg-slate-100 text-slate-600"
-                    }`}
-                  >
-                    {s.talent_score}
+                  <span className="text-xs px-2.5 py-1 rounded-full bg-portal-soft text-portal-dark font-medium">
+                    {s.activity_count} sân chơi
                   </span>
                 </td>
               </tr>

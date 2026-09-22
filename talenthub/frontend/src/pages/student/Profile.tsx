@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { FileText, Star } from "lucide-react";
+import { Award, BookOpen, Briefcase, Star } from "lucide-react";
 import { get } from "../../api/client";
 import { Card, ErrorBox, Loading, PageHeader } from "../../components/ui";
 
@@ -29,6 +29,8 @@ interface Evaluation {
   date: string;
 }
 
+const SKILL_BARS = ["skillbar-a", "skillbar-b", "skillbar-c", "skillbar-d"];
+
 export default function Profile() {
   const [data, setData] = useState<Profile | null>(null);
   const [evals, setEvals] = useState<Evaluation[] | null>(null);
@@ -44,67 +46,140 @@ export default function Profile() {
 
   return (
     <div>
-      <PageHeader title="Hồ sơ năng lực" subtitle="Thông tin cá nhân, năng lực, thành tích, chứng chỉ và dự án (slide 11)." />
+      <PageHeader title="Hồ sơ năng lực" subtitle="Quản lý thông tin cá nhân, theo dõi năng lực, thành tích, chứng chỉ và dự án (slide 11)." />
+
+      {/* Header card với cover gradient (slide 11) */}
+      <Card className="overflow-hidden !p-0 mb-6">
+        <div className="h-24 hero-gradient" />
+        <div className="px-6 pb-5">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div className="flex items-end gap-4">
+              <div className="-mt-10 h-20 w-20 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-3xl font-extrabold shadow-lg border-4 border-white">
+                {data.full_name.charAt(0)}
+              </div>
+              <div className="pb-1">
+                <h2 className="text-xl font-extrabold text-ink">{data.full_name}</h2>
+                <p className="text-sm text-muted">
+                  Lớp {data.class_name} · Khối {data.grade}
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2 pb-1">
+              <button className="rounded-full border border-line bg-white px-4 py-1.5 text-xs font-semibold text-ink hover:bg-canvas-soft">
+                Chia sẻ hồ sơ
+              </button>
+              <button className="rounded-full cta-gradient px-4 py-1.5 text-xs font-semibold text-white">
+                Chỉnh sửa
+              </button>
+            </div>
+          </div>
+          {/* Stats cam (slide 11) */}
+          <div className="mt-4 grid grid-cols-3 gap-4 border-t border-line pt-4">
+            <div>
+              <div className="text-2xl font-extrabold text-orange-500">{data.talent_score}</div>
+              <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">Điểm năng lực</div>
+            </div>
+            <div>
+              <div className="text-2xl font-extrabold text-orange-500">{data.badges.length}</div>
+              <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">Huy hiệu</div>
+            </div>
+            <div>
+              <div className="text-2xl font-extrabold text-orange-500">{data.projects.length}</div>
+              <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">Dự án</div>
+            </div>
+          </div>
+        </div>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Thông tin cá nhân */}
-        <Card>
-          <div className="flex flex-col items-center text-center">
-            <div className="h-20 w-20 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-2xl font-bold">
-              {data.full_name.charAt(0)}
-            </div>
-            <h2 className="mt-3 text-lg font-bold text-slate-900">{data.full_name}</h2>
-            <p className="text-sm text-slate-500">
-              Lớp {data.class_name} · Khối {data.grade}
-            </p>
-            <div className="mt-4 w-full grid grid-cols-3 gap-2 text-center">
-              <div className="rounded-xl bg-amber-50 p-2">
-                <div className="text-lg font-bold text-amber-600">{data.talent_score}</div>
-                <div className="text-[11px] text-slate-500">Điểm năng lực</div>
-              </div>
-              <div className="rounded-xl bg-blue-50 p-2">
-                <div className="text-lg font-bold text-blue-600">{data.experience_hours}h</div>
-                <div className="text-[11px] text-slate-500">Trải nghiệm</div>
-              </div>
-              <div className="rounded-xl bg-violet-50 p-2">
-                <div className="text-lg font-bold text-violet-600">{data.evaluation_count}</div>
-                <div className="text-[11px] text-slate-500">Đánh giá</div>
-              </div>
-            </div>
-          </div>
-          <div className="mt-4 text-sm text-slate-600">
-            <div className="font-medium mb-1">Sở thích</div>
-            <p className="text-slate-500">{data.interests ?? "—"}</p>
-            <div className="font-medium mt-3 mb-1">Giới thiệu</div>
-            <p className="text-slate-500">{data.bio ?? "—"}</p>
-          </div>
-        </Card>
-
-        {/* Kỹ năng */}
+        {/* Kỹ năng — 2 cột + thanh gradient (slide 11) */}
         <Card className="lg:col-span-2">
           <div className="flex items-center gap-2 mb-4">
-            <FileText size={18} className="text-blue-600" />
-            <h2 className="font-semibold text-slate-900">Kỹ năng năng lực</h2>
+            <BookOpen size={18} className="text-pink-500" />
+            <h2 className="font-semibold text-ink">Kỹ năng</h2>
           </div>
-          <div className="space-y-3">
-            {data.skills.map((s) => (
-              <div key={s.code}>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="font-medium text-slate-700">{s.name}</span>
-                  <span className="text-slate-500">{s.level}/10</span>
+          {data.skills.length === 0 ? (
+            <p className="text-sm text-muted">Chưa có kỹ năng được đánh giá.</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+              {data.skills.map((s, i) => (
+                <div key={s.code}>
+                  <div className="flex justify-between text-sm mb-1.5">
+                    <span className="font-medium text-ink">{s.name}</span>
+                    <span className="text-muted">{s.level * 10}</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-canvas-soft overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${SKILL_BARS[i % SKILL_BARS.length]}`}
+                      style={{ width: `${Math.min(100, s.level * 10)}%` }}
+                    />
+                  </div>
                 </div>
-                <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500"
-                    style={{ width: `${Math.min(100, s.level * 10)}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-            {data.skills.length === 0 && (
-              <p className="text-sm text-slate-500">Chưa có kỹ năng được đánh giá.</p>
-            )}
+              ))}
+            </div>
+          )}
+          {(data.interests || data.bio) && (
+            <div className="mt-4 text-sm text-muted border-t border-line pt-3">
+              {data.interests && <p><span className="font-medium text-ink">Sở thích:</span> {data.interests}</p>}
+              {data.bio && <p className="mt-1"><span className="font-medium text-ink">Giới thiệu:</span> {data.bio}</p>}
+            </div>
+          )}
+        </Card>
+
+        {/* Chứng chỉ (slide 11) */}
+        <Card>
+          <div className="flex items-center gap-2 mb-4">
+            <Award size={18} className="text-pink-500" />
+            <h2 className="font-semibold text-ink">Chứng chỉ</h2>
           </div>
+          {data.certificates.length === 0 ? (
+            <p className="text-sm text-muted">Chưa có chứng chỉ nào.</p>
+          ) : (
+            <ul className="space-y-3">
+              {data.certificates.map((c, i) => (
+                <li key={i} className="flex items-center gap-3">
+                  <span className="h-9 w-9 shrink-0 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 text-white flex items-center justify-center">
+                    <Award size={16} />
+                  </span>
+                  <div className="min-w-0">
+                    <div className="text-sm font-semibold text-ink truncate">{c.title}</div>
+                    <div className="text-xs text-muted">
+                      {c.issuer}{c.issued_at ? ` · ${c.issued_at}` : ""}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
+      </div>
+
+      {/* Dự án đã tham gia (slide 11) */}
+      <div className="mt-6">
+        <Card>
+          <div className="flex items-center gap-2 mb-4">
+            <Briefcase size={18} className="text-pink-500" />
+            <h2 className="font-semibold text-ink">Dự án đã tham gia</h2>
+          </div>
+          {data.projects.length === 0 ? (
+            <p className="text-sm text-muted">Chưa tham gia dự án nào.</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {data.projects.map((p) => (
+                <div key={p.id} className="rounded-xl border border-line p-4 flex items-start justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-semibold text-ink">{p.title}</div>
+                    <div className="text-xs text-muted mt-1 capitalize">
+                      {p.field.replace("_", " ")} · {p.status}
+                    </div>
+                  </div>
+                  <span className="shrink-0 rounded-full cta-gradient px-2.5 py-1 text-[11px] font-semibold text-white">
+                    {p.role === "owner" ? "Trưởng nhóm" : "Thành viên"}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </Card>
       </div>
 
@@ -112,20 +187,20 @@ export default function Profile() {
       <div className="mt-6">
         <Card>
           <div className="flex items-center gap-2 mb-4">
-            <Star size={18} className="text-amber-500" />
-            <h2 className="font-semibold text-slate-900">Đánh giá từ giáo viên & huấn luyện viên</h2>
+            <Star size={18} className="text-portal" />
+            <h2 className="font-semibold text-ink">Đánh giá từ giáo viên & huấn luyện viên</h2>
           </div>
           {!evals ? (
             <Loading />
           ) : evals.length === 0 ? (
-            <p className="text-sm text-slate-500">Chưa có đánh giá nào được công bố.</p>
+            <p className="text-sm text-muted">Chưa có đánh giá nào được công bố.</p>
           ) : (
             <div className="space-y-4">
               {evals.map((ev) => (
-                <div key={ev.id} className="rounded-xl border border-slate-100 p-4">
+                <div key={ev.id} className="rounded-xl border border-line p-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="text-sm font-semibold text-slate-800">{ev.activity}</div>
-                    <span className="text-xs px-2 py-1 rounded-full bg-amber-50 text-amber-700 font-medium">
+                    <div className="text-sm font-semibold text-ink">{ev.activity}</div>
+                    <span className="text-xs px-2 py-1 rounded-full bg-portal-soft text-portal-dark font-medium">
                       {ev.total}/100 · {ev.xep_loai}
                     </span>
                   </div>
@@ -133,14 +208,14 @@ export default function Profile() {
                     {ev.criteria.map((c) => (
                       <div key={c.name} className="text-xs">
                         <div className="flex justify-between mb-1">
-                          <span className="text-slate-600">{c.name}</span>
-                          <span className="font-medium text-slate-800">
+                          <span className="text-muted">{c.name}</span>
+                          <span className="font-medium text-ink">
                             {c.score}/{c.max}
                           </span>
                         </div>
-                        <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                        <div className="h-1.5 rounded-full bg-canvas-soft overflow-hidden">
                           <div
-                            className="h-full rounded-full bg-emerald-500"
+                            className="h-full rounded-full hero-gradient"
                             style={{ width: `${Math.min(100, (c.score / c.max) * 100)}%` }}
                           />
                         </div>
@@ -148,53 +223,14 @@ export default function Profile() {
                     ))}
                   </div>
                   {ev.comment && (
-                    <p className="mt-3 text-sm text-slate-600 italic">“{ev.comment}”</p>
+                    <p className="mt-3 text-sm text-muted italic">“{ev.comment}”</p>
                   )}
-                  <div className="mt-2 text-xs text-slate-400">
+                  <div className="mt-2 text-xs text-muted-light">
                     {ev.reviewer} · {ev.date}
                   </div>
                 </div>
               ))}
             </div>
-          )}
-        </Card>
-      </div>
-
-      {/* Chứng chỉ & Dự án — slide 11 */}
-      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <h2 className="font-semibold text-slate-900 mb-3">Chứng chỉ</h2>
-          {data.certificates.length === 0 ? (
-            <p className="text-sm text-slate-500">Chưa có chứng chỉ nào.</p>
-          ) : (
-            <ul className="space-y-2">
-              {data.certificates.map((c, i) => (
-                <li key={i} className="text-sm rounded-xl bg-violet-50 p-3">
-                  <div className="font-medium text-slate-800">{c.title}</div>
-                  <div className="text-xs text-slate-500">
-                    {c.issuer}
-                    {c.issued_at ? ` · ${c.issued_at}` : ""}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
-        <Card>
-          <h2 className="font-semibold text-slate-900 mb-3">Dự án đã tham gia</h2>
-          {data.projects.length === 0 ? (
-            <p className="text-sm text-slate-500">Chưa tham gia dự án nào.</p>
-          ) : (
-            <ul className="space-y-2">
-              {data.projects.map((p) => (
-                <li key={p.id} className="text-sm rounded-xl bg-blue-50 p-3">
-                  <div className="font-medium text-slate-800">{p.title}</div>
-                  <div className="text-xs text-slate-500">
-                    {p.field} · {p.status} · {p.role === "owner" ? "Chủ nhiệm" : "Thành viên"}
-                  </div>
-                </li>
-              ))}
-            </ul>
           )}
         </Card>
       </div>

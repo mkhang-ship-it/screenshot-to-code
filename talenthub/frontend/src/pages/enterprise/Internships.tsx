@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import { Briefcase, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { get, post } from "../../api/client";
-import { Card, ErrorBox, Loading, PageHeader } from "../../components/ui";
+import { Card, ErrorBox, Loading } from "../../components/ui";
 
 interface Internship {
   id: number;
@@ -50,28 +50,30 @@ export default function Internships() {
 
   return (
     <div>
-      <PageHeader
-        title="Tuyển thực tập"
-        subtitle="Đăng tin tuyển thực tập sinh, theo dõi ứng viên nộp hồ sơ (slide 30)."
-        actions={
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-xl bg-amber-500 text-white hover:bg-amber-600 font-medium"
-          >
-            <Plus size={16} /> Đăng tin mới
-          </button>
-        }
-      />
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-extrabold tracking-tight text-ink">Tuyển thực tập sinh</h1>
+          <p className="mt-1 text-sm text-muted">
+            {data.length} tin đăng · {data.reduce((s, p) => s + p.applicant_count, 0)} ứng viên đang xét duyệt.
+          </p>
+        </div>
+        <button
+          onClick={() => setShowForm(!showForm)}
+          className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-full cta-gradient text-white font-semibold"
+        >
+          <Plus size={16} /> Đăng tin mới
+        </button>
+      </div>
 
       {showForm && (
-        <Card className="mb-6 border-amber-200">
-          <h3 className="font-semibold text-slate-900 mb-3">Tin tuyển thực tập mới</h3>
+        <Card className="mb-6 border-portal-soft">
+          <h3 className="font-semibold text-ink mb-3">Tin tuyển thực tập mới</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <input
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
               placeholder="Tiêu đề vị trí *"
-              className="px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:border-amber-400"
+              className="px-3 py-2 rounded-xl border border-line text-sm outline-none focus:border-portal"
             />
             <div className="flex gap-3">
               <input
@@ -80,26 +82,26 @@ export default function Internships() {
                 value={form.slots}
                 onChange={(e) => setForm({ ...form, slots: Number(e.target.value) })}
                 placeholder="Số vị trí"
-                className="w-28 px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none"
+                className="w-28 px-3 py-2 rounded-xl border border-line text-sm outline-none"
               />
               <input
                 type="date"
                 value={form.deadline}
                 onChange={(e) => setForm({ ...form, deadline: e.target.value })}
-                className="flex-1 px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none"
+                className="flex-1 px-3 py-2 rounded-xl border border-line text-sm outline-none"
               />
             </div>
             <input
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               placeholder="Mô tả công việc, yêu cầu..."
-              className="md:col-span-2 px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:border-amber-400"
+              className="md:col-span-2 px-3 py-2 rounded-xl border border-line text-sm outline-none focus:border-portal"
             />
             <div className="md:col-span-2 flex gap-2">
-              <button onClick={create} className="text-sm px-4 py-2 rounded-xl bg-amber-500 text-white font-medium">
+              <button onClick={create} className="text-sm px-4 py-2 rounded-xl bg-portal text-white font-medium">
                 Đăng tin
               </button>
-              <button onClick={() => setShowForm(false)} className="text-sm px-4 py-2 rounded-xl bg-slate-100 text-slate-600">
+              <button onClick={() => setShowForm(false)} className="text-sm px-4 py-2 rounded-xl bg-canvas-soft text-muted">
                 Hủy
               </button>
             </div>
@@ -107,36 +109,39 @@ export default function Internships() {
         </Card>
       )}
 
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {data.length === 0 && (
-          <Card>
-            <p className="text-sm text-slate-500 text-center py-6">Chưa có tin tuyển dụng — bấm "Đăng tin mới".</p>
+          <Card className="lg:col-span-2">
+            <p className="text-sm text-muted text-center py-6">Chưa có tin tuyển dụng — bấm "Đăng tin mới".</p>
           </Card>
         )}
         {data.map((p) => (
           <Card key={p.id}>
-            <div className="flex items-start justify-between">
-              <div className="flex items-start gap-3">
-                <div className="h-10 w-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-                  <Briefcase size={18} />
-                </div>
-                <div>
-                  <div className="font-semibold text-slate-900">{p.title}</div>
-                  <div className="text-sm text-slate-500 mt-0.5 line-clamp-2">{p.description ?? "—"}</div>
-                  <div className="mt-2 flex flex-wrap gap-2 text-xs">
-                    <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">{p.slots} vị trí</span>
-                    <span className="px-2 py-0.5 rounded-full bg-violet-50 text-violet-700">{p.applicant_count} ứng viên</span>
-                    {p.deadline && <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">Hạn: {p.deadline}</span>}
-                  </div>
-                </div>
-              </div>
+            <div className="flex items-start justify-between gap-2">
+              <div className="font-bold text-ink">{p.title}</div>
               <span
-                className={`text-xs px-2.5 py-1 rounded-full ${
-                  p.status === "open" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"
+                className={`shrink-0 text-[11px] px-2.5 py-1 rounded-full font-medium ${
+                  p.status === "open" ? "bg-emerald-50 text-emerald-600" : "bg-canvas-soft text-muted"
                 }`}
               >
-                {p.status === "open" ? "Đang tuyển" : "Đóng"}
+                {p.status === "open" ? "Đang tuyển" : "Tạm dừng"}
               </span>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
+              <span>{p.slots} vị trí</span>
+              <span>{p.applicant_count} ứng viên</span>
+              {p.deadline && <span>Hạn: {p.deadline}</span>}
+            </div>
+            {p.description && (
+              <p className="mt-1.5 text-xs text-muted-light line-clamp-2">{p.description}</p>
+            )}
+            <div className="mt-3 flex gap-2">
+              <button className="flex-1 text-xs px-3 py-2 rounded-full border border-line font-semibold text-ink hover:bg-canvas-soft">
+                Xem ứng viên
+              </button>
+              <button className="flex-1 text-xs px-3 py-2 rounded-full bg-orange-100 font-semibold text-ink">
+                Chỉnh sửa
+              </button>
             </div>
           </Card>
         ))}

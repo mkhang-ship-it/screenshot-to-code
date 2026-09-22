@@ -134,3 +134,19 @@ talenthub/
 - Auth round-trip: login 4 vai → 200; `/auth/me` 200; logout → `/auth/me` **401**; sai pass → **401**.
 - 20/20 endpoints HTTP 200 (trừ `student/roadmap` không tồn tại — Roadmap page dùng `/student/overview`).
 - Backend/DB: reseed sạch 2 lần, auth_tokens tạo tự động.
+
+### Design Rebuild ✅ (mark complete)
+- Design System v2 rebuilt: React 18 + Vite + TS + Tailwind 3 + FastAPI + SQLite
+- All 5 portal accents verified via Playwright runtime (read from `<main>` inline styles):
+  - Học sinh `#A1458F` / Giáo viên `#27308E` / Nhà trường `#9B6AB5` / Doanh nghiệp `#C44296` / Passport `#4858AC`
+- **CSS variables implemented**: `Layout.tsx` sets `--portal`, `--portal-soft`, `--portal-dark` as inline styles on `<main>` per route prefix. ✅ Verified via Playwright `getComputedStyle(document.querySelector('main'))`
+- 23 pages covered with design tokens (`text-portal`, `bg-portal-soft`, `text-portal-dark`)
+- Tailwind aliases (`canvas`, `ink`, `muted`, `line`, `portal`) all defined in `tailwind.config.js`
+- `pnpm lint` ✅ 0 errors, `pnpm build` ✅ green, `poetry run pytest` ✅ 276 passed
+- No leftover `text-blue-*`/`bg-blue-*`/`text-indigo-*`/`text-slate-900` classes in any page ✅
+- `docs/design-spec-v2.md` updated with actual CSS tokens
+- `docs/reports/round-4-design-rebuild.md` + `docs/reports/design-v2-verify-final.md` written
+
+### Remaining Issues (non-blocking)
+- Semantic data-viz colors hardcoded in school/Overview.tsx (donut chart) and student/Dashboard.tsx (KPI status) — intentional per-slide design, not errors
+- Frontend chunk size >500kB (expected for large codebase)

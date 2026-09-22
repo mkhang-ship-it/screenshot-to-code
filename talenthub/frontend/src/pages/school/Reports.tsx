@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Award, Download, FileSpreadsheet, FileText, Users } from "lucide-react";
 import { get } from "../../api/client";
-import { Card, ErrorBox, Loading, PageHeader } from "../../components/ui";
+import { Card, ErrorBox, Loading } from "../../components/ui";
 
 interface ReportRow {
   id: number;
@@ -44,25 +44,31 @@ export default function Reports() {
   const grades = [...new Set(data.map((r) => r.grade))].sort();
   const top10 = [...data].sort((a, b) => b.talent_score - a.talent_score).slice(0, 10);
 
-  const presets: { icon: React.ReactNode; iconBg: string; title: string; rows: ReportRow[]; file: string }[] = [
+  const presets: { icon: React.ReactNode; iconBg: string; title: string; meta: string; pill: string; rows: ReportRow[]; file: string }[] = [
     {
       icon: <Users size={20} className="text-white" />,
-      iconBg: "bg-violet-600",
+      iconBg: "bg-gradient-to-br from-violet-500 to-purple-700",
       title: "Báo cáo năng lực toàn trường",
+      meta: `${today} · CSV · ${data.length} học sinh`,
+      pill: "bg-violet-50 text-violet-700",
       rows: data,
       file: "bao-cao-nang-luc-toan-truong",
     },
     ...grades.map((g) => ({
       icon: <FileSpreadsheet size={20} className="text-white" />,
-      iconBg: "bg-orange-500",
+      iconBg: "bg-gradient-to-br from-orange-400 to-orange-600",
       title: `Phân tích năng khiếu khối ${g}`,
+      meta: `${today} · CSV · ${data.filter((r) => r.grade === g).length} học sinh`,
+      pill: "bg-orange-50 text-orange-600",
       rows: data.filter((r) => r.grade === g),
       file: `bao-cao-khoi-${g}`,
     })),
     {
       icon: <Award size={20} className="text-white" />,
-      iconBg: "bg-emerald-600",
+      iconBg: "bg-gradient-to-br from-emerald-500 to-teal-600",
       title: "Top 10 học sinh tiêu biểu",
+      meta: `${today} · CSV · ${top10.length} học sinh`,
+      pill: "bg-emerald-50 text-emerald-700",
       rows: top10,
       file: "bao-cao-top-10",
     },
@@ -70,12 +76,22 @@ export default function Reports() {
 
   return (
     <div>
-      <PageHeader
-        title="Báo cáo"
-        subtitle="Tải về các báo cáo định kỳ và tổng kết nhanh chóng, dễ dàng (slide 26)."
-      />
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="h-11 w-11 rounded-full bg-gradient-to-br from-violet-500 to-purple-700 text-white flex items-center justify-center">
+            <FileText size={20} />
+          </span>
+          <div>
+            <h1 className="text-2xl font-extrabold tracking-tight text-ink">Báo cáo</h1>
+            <p className="mt-0.5 text-sm text-muted">Tải về các báo cáo định kỳ và tổng kết (slide 26).</p>
+          </div>
+        </div>
+        <button className="text-sm px-4 py-2 rounded-full cta-gradient text-white font-semibold">
+          + Tạo báo cáo mới
+        </button>
+      </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {presets.map((p) => (
           <Card key={p.title}>
             <div className="flex items-center gap-4 flex-wrap">
@@ -83,27 +99,19 @@ export default function Reports() {
                 {p.icon}
               </div>
               <div className="flex-1 min-w-[200px]">
-                <div className="font-semibold text-slate-900">{p.title}</div>
-                <div className="text-xs text-slate-400 mt-0.5 flex items-center gap-2">
-                  <span>{today}</span>
-                  <span>•</span>
-                  <span className="font-medium text-slate-500">CSV</span>
-                  <span>•</span>
-                  <span className="font-medium text-slate-500">JSON</span>
-                  <span>•</span>
-                  <span>{p.rows.length} học sinh</span>
-                </div>
+                <div className="font-bold text-ink">{p.title}</div>
+                <div className="text-xs text-muted-light mt-0.5">{p.meta}</div>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => download(new Blob([JSON.stringify(p.rows, null, 2)], { type: "application/json" }), `${p.file}.json`)}
-                  className="flex items-center gap-1.5 text-sm px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600"
+                  className="flex items-center gap-1.5 text-sm px-3 py-2 rounded-full border border-line bg-white hover:bg-canvas-soft text-muted font-medium"
                 >
                   <Download size={14} /> JSON
                 </button>
                 <button
                   onClick={() => download(new Blob([toCsv(p.rows)], { type: "text/csv;charset=utf-8" }), `${p.file}.csv`)}
-                  className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-xl bg-violet-600 text-white hover:bg-violet-700 font-medium"
+                  className={`flex items-center gap-1.5 text-sm px-4 py-2 rounded-full font-semibold ${p.pill}`}
                 >
                   <Download size={14} /> Tải về
                 </button>
@@ -113,7 +121,7 @@ export default function Reports() {
         ))}
       </div>
 
-      <div className="mt-4 text-xs text-slate-400 flex items-center gap-1.5">
+      <div className="mt-4 text-xs text-muted-light flex items-center gap-1.5">
         <FileText size={13} />
         Dữ liệu lấy từ API /school/reports — xuất CSV (Excel đọc được, UTF-8 BOM) hoặc JSON.
       </div>

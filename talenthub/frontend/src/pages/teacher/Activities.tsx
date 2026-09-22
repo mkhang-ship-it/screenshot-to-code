@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { MapPin, Plus, Users } from "lucide-react";
+import { Clock, MoreHorizontal, Plus, Users } from "lucide-react";
 import { get, post } from "../../api/client";
 import { Card, ErrorBox, Loading, PageHeader } from "../../components/ui";
 
@@ -16,6 +16,13 @@ interface Activity {
 }
 
 const FIELDS = ["ky_thuat", "nghe_thuat", "kinh_doanh", "the_thao", "hoc_thuat", "sang_tao"];
+
+const FIELD_ICONS = [
+  "bg-gradient-to-br from-orange-400 to-orange-600",
+  "bg-gradient-to-br from-pink-500 to-rose-600",
+  "bg-gradient-to-br from-violet-500 to-purple-700",
+  "bg-gradient-to-br from-emerald-500 to-teal-600",
+];
 
 export default function Activities() {
   const [data, setData] = useState<Activity[] | null>(null);
@@ -46,32 +53,32 @@ export default function Activities() {
     <div>
       <PageHeader
         title="Sân chơi của tôi"
-        subtitle="Tạo và quản lý các lab, CLB, workshop mình phụ trách (slide 21)."
+        subtitle="Tạo, mở đăng ký và quản lý các hoạt động bạn phụ trách (slide 21)."
         actions={
           <button
             onClick={() => setShowForm(!showForm)}
-            className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700 font-medium"
+            className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-full cta-gradient text-white font-semibold"
           >
-            <Plus size={16} /> Tạo sân chơi
+            <Plus size={16} /> Tạo sân chơi mới
           </button>
         }
       />
 
       {showForm && (
-        <Card className="mb-6 border-blue-200">
-          <h3 className="font-semibold text-slate-900 mb-3">Sân chơi mới</h3>
+        <Card className="mb-6 border-line">
+          <h3 className="font-semibold text-ink mb-3">Sân chơi mới</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <input
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
               placeholder="Tên sân chơi *"
-              className="px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:border-blue-400"
+              className="px-3 py-2 rounded-xl border border-line text-sm outline-none focus:border-portal"
             />
             <div className="flex gap-3">
               <select
                 value={form.field}
                 onChange={(e) => setForm({ ...form, field: e.target.value })}
-                className="flex-1 px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white"
+                className="flex-1 px-3 py-2 rounded-xl border border-line text-sm bg-white"
               >
                 {FIELDS.map((f) => (
                   <option key={f} value={f}>
@@ -84,20 +91,20 @@ export default function Activities() {
                 value={form.capacity}
                 onChange={(e) => setForm({ ...form, capacity: Number(e.target.value) })}
                 placeholder="Sức chứa"
-                className="w-24 px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none"
+                className="w-24 px-3 py-2 rounded-xl border border-line text-sm outline-none"
               />
             </div>
             <input
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               placeholder="Mô tả ngắn"
-              className="md:col-span-2 px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:border-blue-400"
+              className="md:col-span-2 px-3 py-2 rounded-xl border border-line text-sm outline-none focus:border-portal"
             />
             <div className="md:col-span-2 flex gap-2">
-              <button onClick={create} className="text-sm px-4 py-2 rounded-xl bg-blue-600 text-white font-medium">
+              <button onClick={create} className="text-sm px-4 py-2 rounded-xl bg-portal text-white font-medium">
                 Lưu
               </button>
-              <button onClick={() => setShowForm(false)} className="text-sm px-4 py-2 rounded-xl bg-slate-100 text-slate-600">
+              <button onClick={() => setShowForm(false)} className="text-sm px-4 py-2 rounded-xl bg-canvas-soft text-muted">
                 Hủy
               </button>
             </div>
@@ -105,41 +112,67 @@ export default function Activities() {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {data.length === 0 && (
-          <Card>
-            <p className="text-sm text-slate-500">Chưa có sân chơi nào — bấm "Tạo sân chơi" để bắt đầu.</p>
-          </Card>
-        )}
-        {data.map((a) => (
-          <Card key={a.id}>
-            <div className="flex items-start justify-between">
-              <span className="text-[11px] px-2 py-0.5 rounded-full bg-violet-50 text-violet-700 font-medium capitalize">
-                {a.field.replace("_", " ")}
-              </span>
-              <span
-                className={`text-[11px] px-2 py-0.5 rounded-full ${
-                  a.status === "open" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"
-                }`}
-              >
-                {a.status === "open" ? "Đang mở" : a.status}
-              </span>
-            </div>
-            <h3 className="mt-2 font-semibold text-slate-900">{a.title}</h3>
-            <p className="mt-1 text-sm text-slate-500 line-clamp-2">{a.description}</p>
-            <div className="mt-3 flex items-center justify-between text-xs text-slate-400">
-              <div className="flex items-center gap-1.5">
-                <Users size={13} />
-                {a.registered_count}/{a.capacity} học viên
-              </div>
-              <div className="flex items-center gap-1.5">
-                <MapPin size={13} />
-                {a.start_date ?? "Sắp mở"}
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
+      <Card className="overflow-hidden !p-0">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left text-muted-light text-xs uppercase tracking-wider border-b border-line bg-canvas-soft/60">
+              <th className="px-5 py-3">Hoạt động</th>
+              <th className="px-5 py-3">Lĩnh vực</th>
+              <th className="px-5 py-3">Thời gian</th>
+              <th className="px-5 py-3">Học viên</th>
+              <th className="px-5 py-3 text-right">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.length === 0 && (
+              <tr>
+                <td colSpan={5} className="px-5 py-8 text-center text-muted">
+                  Chưa có sân chơi nào — bấm "Tạo sân chơi mới" để bắt đầu.
+                </td>
+              </tr>
+            )}
+            {data.map((a, i) => (
+              <tr key={a.id} className="border-b border-line hover:bg-canvas-soft/50">
+                <td className="px-5 py-3.5">
+                  <div className="flex items-center gap-3">
+                    <span className={`h-9 w-9 shrink-0 rounded-full ${FIELD_ICONS[i % FIELD_ICONS.length]} text-white flex items-center justify-center`}>
+                      <Users size={16} />
+                    </span>
+                    <span className="font-semibold text-ink">{a.title}</span>
+                  </div>
+                </td>
+                <td className="px-5 py-3.5">
+                  <span className="text-xs px-2.5 py-1 rounded-full bg-canvas-soft text-muted font-medium capitalize">
+                    {a.field.replace("_", " ")}
+                  </span>
+                </td>
+                <td className="px-5 py-3.5">
+                  <span className="inline-flex items-center gap-1.5 text-xs text-muted">
+                    <Clock size={13} /> {a.start_date ?? "Sắp mở"}
+                  </span>
+                </td>
+                <td className="px-5 py-3.5">
+                  <span className="inline-flex items-center gap-1.5 text-xs text-muted">
+                    <Users size={13} /> {a.registered_count}/{a.capacity}
+                  </span>
+                </td>
+                <td className="px-5 py-3.5 text-right">
+                  <button className="text-muted hover:text-ink" title="Tùy chọn">
+                    <MoreHorizontal size={18} />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Card>
+
+      <Card className="mt-4">
+        <div className="text-xs text-muted">Đang phụ trách</div>
+        <div className="text-lg font-extrabold text-ink">
+          {data.length} sân chơi · {data.reduce((s, a) => s + a.registered_count, 0)} học viên
+        </div>
+      </Card>
     </div>
   );
 }

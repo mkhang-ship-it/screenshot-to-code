@@ -10,6 +10,7 @@ import StudentActivities from "./pages/student/Activities";
 import StudentCheckin from "./pages/student/Checkin";
 import StudentBadges from "./pages/student/Badges";
 import StudentRoadmap from "./pages/student/Roadmap";
+import StudentStatistics from "./pages/student/Statistics";
 
 import TeacherOverview from "./pages/teacher/Overview";
 import TeacherActivities from "./pages/teacher/Activities";
@@ -70,6 +71,7 @@ export default function App() {
           <Route path="student/checkin" element={<StudentCheckin />} />
           <Route path="student/badges" element={<StudentBadges />} />
           <Route path="student/roadmap" element={<StudentRoadmap />} />
+          <Route path="student/statistics" element={<StudentStatistics />} />
 
           {/* GIÁO VIÊN */}
           <Route path="teacher" element={<TeacherOverview />} />

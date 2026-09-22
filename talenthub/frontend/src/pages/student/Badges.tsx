@@ -15,13 +15,6 @@ interface Badge {
   progress_pct: number;
 }
 
-const COLOR_MAP: Record<string, string> = {
-  blue: "from-blue-500 to-indigo-600",
-  violet: "from-violet-500 to-purple-600",
-  amber: "from-amber-400 to-orange-500",
-  emerald: "from-emerald-500 to-teal-600",
-};
-
 export default function Badges() {
   const [data, setData] = useState<Badge[] | null>(null);
   const [error, setError] = useState("");
@@ -42,67 +35,70 @@ export default function Badges() {
         subtitle={`Đã mở khóa ${unlocked}/${data.length} huy hiệu — tích lũy giờ trải nghiệm để thăng cấp (slide 17).`}
       />
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 mb-6">
+      <div className="rounded-2xl border border-line bg-white p-5 mb-6">
         <div className="flex justify-between text-sm mb-2">
-          <span className="text-slate-500">Tiến trình tổng</span>
-          <span className="font-semibold text-slate-900">
+          <span className="text-muted">Tiến trình tổng</span>
+          <span className="font-semibold text-ink">
             {unlocked}/{data.length} huy hiệu
           </span>
         </div>
-        <div className="h-3 rounded-full bg-slate-100 overflow-hidden">
+        <div className="h-3 rounded-full bg-canvas-soft overflow-hidden">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-violet-600"
+            className="h-full rounded-full hero-gradient"
             style={{ width: `${(unlocked / Math.max(data.length, 1)) * 100}%` }}
           />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {data.map((b) => (
-          <Card
-            key={b.code}
-            className={`relative ${b.unlocked ? "border-transparent ring-2 ring-amber-200" : "opacity-90"}`}
-          >
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {data.map((b) =>
+          b.unlocked ? (
             <div
-              className={`mx-auto h-16 w-16 rounded-full bg-gradient-to-br ${
-                b.unlocked ? COLOR_MAP[b.color] ?? "from-blue-500 to-indigo-600" : "from-slate-200 to-slate-300"
-              } flex items-center justify-center text-white shadow-lg`}
+              key={b.code}
+              className="relative rounded-2xl hero-gradient p-5 text-white shadow-lg flex items-center gap-4"
             >
-              <Award size={28} />
+              <div className="h-16 w-16 shrink-0 rounded-2xl bg-white/20 flex items-center justify-center">
+                <Award size={30} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="font-bold text-lg">{b.name}</div>
+                <div className="text-sm text-white/85">{b.description}</div>
+              </div>
+              <span className="shrink-0 rounded-full bg-white/25 px-3 py-1 text-xs font-semibold">
+                Đã đạt
+              </span>
             </div>
-            <div className="mt-3 text-center">
-              <div className={`font-semibold ${b.unlocked ? "text-slate-900" : "text-slate-500"}`}>
-                {b.name}
+          ) : (
+            <Card key={b.code}>
+              <div className="flex items-center gap-4">
+                <div className="h-16 w-16 shrink-0 rounded-2xl bg-canvas-soft text-muted flex items-center justify-center">
+                  <Award size={30} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="font-bold text-lg text-ink">{b.name}</div>
+                  <div className="text-sm text-muted">
+                    {b.min_hours} giờ trải nghiệm — chuyên gia trẻ
+                  </div>
+                </div>
               </div>
-              <div className="text-xs text-slate-400 mt-0.5">{b.min_hours}+ giờ trải nghiệm</div>
-              <p className="text-xs text-slate-500 mt-2 leading-relaxed">{b.description}</p>
-            </div>
-            {/* progress */}
-            <div className="mt-3">
-              <div className="flex justify-between text-[11px] text-slate-400 mb-1">
-                <span>
-                  {b.unlocked
-                    ? "Đã mở khóa 🎉"
-                    : `Còn ${Math.max(0, Math.round((b.min_hours - b.current_hours) * 10) / 10)}h nữa`}
-                </span>
-                <span>{b.progress_pct}%</span>
+              {/* progress */}
+              <div className="mt-4">
+                <div className="flex justify-between text-xs text-muted mb-1.5">
+                  <span>Tiến độ</span>
+                  <span className="font-semibold text-ink">
+                    {b.current_hours}/{b.min_hours}h
+                  </span>
+                </div>
+                <div className="h-2 rounded-full bg-canvas-soft overflow-hidden">
+                  <div
+                    className="h-full rounded-full hero-gradient"
+                    style={{ width: `${b.progress_pct}%` }}
+                  />
+                </div>
               </div>
-              <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
-                <div
-                  className={`h-full rounded-full ${
-                    b.unlocked ? "bg-gradient-to-r from-amber-400 to-orange-500" : "bg-slate-300"
-                  }`}
-                  style={{ width: `${b.progress_pct}%` }}
-                />
-              </div>
-            </div>
-            {b.unlocked && (
-              <div className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-amber-400 text-white flex items-center justify-center text-xs shadow">
-                ✓
-              </div>
-            )}
-          </Card>
-        ))}
+            </Card>
+          )
+        )}
       </div>
     </div>
   );
