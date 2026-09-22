@@ -11,6 +11,7 @@ Tài khoản đăng nhập demo (password: demo123):
 import json
 from datetime import datetime, timedelta
 
+from sqlalchemy import func
 from .database import Base, SessionLocal, engine
 from .models import (
     Activity,
@@ -366,8 +367,9 @@ def run():
         ("Triển lãm tranh 3D", "nghe_thuat", 2, "Triển lãm tranh in 3D do học sinh thiết kế."),
     ]
     projects = []
-    for title, field, owner_i, desc in proj:
-        pr = Project(title=title, field=field, owner_student_id=students[owner_i].id, description=desc, status="active")
+    _goals = [50_000_000, 30_000_000, 20_000_000]
+    for idx, (title, field, owner_i, desc) in enumerate(proj):
+        pr = Project(title=title, field=field, owner_student_id=students[owner_i].id, description=desc, status="active", funding_goal=_goals[idx], funded_total=0)
         projects.append(pr)
     db.add_all(projects)
     db.flush()
@@ -378,8 +380,8 @@ def run():
 
     # ---------- internships ----------
     posts = [
-        InternshipPost(enterprise_id=ent.id, title="Thực tập sinh Lập trình IoT", description="Tham gia team phát triển thiết bị thông minh.", slots=3, status="open", deadline="2026-10-30"),
-        InternshipPost(enterprise_id=ent.id, title="Thực tập sinh Marketing số", description="Hỗ trợ chiến dịch truyền thông sản phẩm.", slots=2, status="open", deadline="2026-11-15"),
+        InternshipPost(enterprise_id=ent.id, title="Thực tập sinh Lập trình IoT", description="Tham gia team phát triển thiết bị thông minh.", required_skills="Python, C++, Arduino, MQTT", slots=3, status="open", deadline="2026-10-30"),
+        InternshipPost(enterprise_id=ent.id, title="Thực tập sinh Marketing số", description="Hỗ trợ chiến dịch truyền thông sản phẩm.", required_skills="Facebook Ads, Google Analytics, Content Writing", slots=2, status="open", deadline="2026-11-15"),
     ]
     db.add_all(posts)
     db.flush()
@@ -387,8 +389,12 @@ def run():
         db.add(InternshipApplication(post_id=p.id, student_id=students[i].id, status="pending" if i else "reviewing"))
 
     # ---------- sponsorships ----------
-    db.add(Sponsorship(enterprise_id=ent.id, project_id=projects[0].id, amount=10_000_000, status="approved"))
-    db.add(Sponsorship(enterprise_id=ent.id, project_id=projects[1].id, amount=5_000_000, status="pending"))
+    db.add(Sponsorship(enterprise_id=ent.id, project_id=projects[0].id, amount=10_000_000, conditions="Báo cáo tiến độ hàng tháng", status="approved"))
+    db.add(Sponsorship(enterprise_id=ent.id, project_id=projects[1].id, amount=5_000_000, conditions="Cam kết hoàn thành MVP trong 3 tháng", status="pending"))
+    # Cập nhật funded_total cho projects
+    for pr in projects:
+        approved = db.query(func.coalesce(func.sum(Sponsorship.amount), 0)).filter(Sponsorship.project_id == pr.id, Sponsorship.status == "approved").scalar() or 0
+        pr.funded_total = approved
     db.flush()
 
     # ---------- AI suggestions ----------

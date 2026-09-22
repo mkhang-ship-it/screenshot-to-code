@@ -99,16 +99,20 @@ export default function Profile() {
             <h2 className="font-semibold text-ink">Kỹ năng</h2>
           </div>
           {data.skills.length === 0 ? (
-            <p className="text-sm text-muted">Chưa có kỹ năng được đánh giá.</p>
+            <div className="text-center py-8" role="status" aria-live="polite">
+              <BookOpen size={32} className="mx-auto text-muted-light" aria-hidden="true" />
+              <p className="mt-2 text-sm text-muted">Chưa có kỹ năng được đánh giá.</p>
+              <p className="mt-1 text-xs text-muted-light">Hoàn thành bài test hoặc nhận đánh giá từ GV để thấy kỹ năng ở đây.</p>
+            </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4" role="list" aria-label="Danh sách kỹ năng">
               {data.skills.map((s, i) => (
-                <div key={s.code}>
+                <div key={s.code} role="listitem">
                   <div className="flex justify-between text-sm mb-1.5">
                     <span className="font-medium text-ink">{s.name}</span>
-                    <span className="text-muted">{s.level * 10}</span>
+                    <span className="text-muted tabular-nums">{s.level * 10}</span>
                   </div>
-                  <div className="h-2 rounded-full bg-canvas-soft overflow-hidden">
+                  <div className="h-2 rounded-full bg-canvas-soft overflow-hidden" role="progressbar" aria-valuenow={Math.min(100, s.level * 10)} aria-valuemin={0} aria-valuemax={100} aria-label={`${s.name}: ${s.level * 10} phần trăm`}>
                     <div
                       className={`h-full rounded-full ${SKILL_BARS[i % SKILL_BARS.length]}`}
                       style={{ width: `${Math.min(100, s.level * 10)}%` }}
@@ -133,7 +137,11 @@ export default function Profile() {
             <h2 className="font-semibold text-ink">Chứng chỉ</h2>
           </div>
           {data.certificates.length === 0 ? (
-            <p className="text-sm text-muted">Chưa có chứng chỉ nào.</p>
+            <div className="text-center py-8" role="status" aria-live="polite">
+              <Award size={32} className="mx-auto text-muted-light" aria-hidden="true" />
+              <p className="mt-2 text-sm text-muted">Chưa có chứng chỉ nào.</p>
+              <p className="mt-1 text-xs text-muted-light">Chứng chỉ sẽ hiện ở đây sau khi bạn hoàn thành các khóa học.</p>
+            </div>
           ) : (
             <ul className="space-y-3">
               {data.certificates.map((c, i) => (
@@ -162,7 +170,11 @@ export default function Profile() {
             <h2 className="font-semibold text-ink">Dự án đã tham gia</h2>
           </div>
           {data.projects.length === 0 ? (
-            <p className="text-sm text-muted">Chưa tham gia dự án nào.</p>
+            <div className="text-center py-8" role="status" aria-live="polite">
+              <Briefcase size={32} className="mx-auto text-muted-light" aria-hidden="true" />
+              <p className="mt-2 text-sm text-muted">Chưa tham gia dự án nào.</p>
+              <p className="mt-1 text-xs text-muted-light">Dự án sẽ hiện ở đây khi bạn tham gia các hoạt động nhóm.</p>
+            </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {data.projects.map((p) => (
@@ -193,7 +205,11 @@ export default function Profile() {
           {!evals ? (
             <Loading />
           ) : evals.length === 0 ? (
-            <p className="text-sm text-muted">Chưa có đánh giá nào được công bố.</p>
+            <div className="text-center py-8" role="status" aria-live="polite">
+              <Star size={32} className="mx-auto text-muted-light" aria-hidden="true" />
+              <p className="mt-2 text-sm text-muted">Chưa có đánh giá nào được công bố.</p>
+              <p className="mt-1 text-xs text-muted-light">Đánh giá từ GV/HLV sẽ hiện ở đây khi có.</p>
+            </div>
           ) : (
             <div className="space-y-4">
               {evals.map((ev) => (

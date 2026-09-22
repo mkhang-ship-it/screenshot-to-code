@@ -116,8 +116,26 @@ class ActivityOut(ActivityIn, ORMModel):
 class InternshipPostIn(BaseModel):
     title: str
     description: Optional[str] = None
+    required_skills: Optional[str] = None
     slots: int = 3
     deadline: Optional[str] = None
+    status: Optional[str] = None
+
+    def model_post_init(self, __context):
+        if not self.title or not self.title.strip():
+            raise ValueError("Tiêu đề không được để trống")
+        if self.slots <= 0:
+            raise ValueError("Số vị trí phải lớn hơn 0")
+        if self.deadline:
+            from datetime import date
+            try:
+                deadline_date = date.fromisoformat(self.deadline)
+                if deadline_date < date.today():
+                    raise ValueError("Hạn nộp phải là ngày hôm nay hoặc trong tương lai")
+            except ValueError as e:
+                if "Hạn nộp" in str(e):
+                    raise
+                raise ValueError("Định dạng ngày không hợp lệ (YYYY-MM-DD)")
 
 
 class InternshipPostOut(InternshipPostIn, ORMModel):
@@ -126,6 +144,45 @@ class InternshipPostOut(InternshipPostIn, ORMModel):
     status: str = "open"
     created_at: datetime
     applicant_count: int = 0
+
+
+class SponsorshipIn(BaseModel):
+    project_id: int
+    amount: float = 5_000_000
+    conditions: Optional[str] = None
+
+    def model_post_init(self, __context):
+        if self.amount <= 0:
+            raise ValueError("Số tiền tài trợ phải lớn hơn 0")
+        if not self.project_id:
+            raise ValueError("Phải chọn dự án để tài trợ")
+
+
+class SponsorshipOut(ORMModel):
+    id: int
+    enterprise_id: int
+    project_id: int
+    amount: float
+    conditions: Optional[str] = None
+    status: str
+    created_at: datetime
+    project_title: Optional[str] = None
+    project_field: Optional[str] = None
+
+
+class InterviewInvitationIn(BaseModel):
+    student_id: int
+    message: Optional[str] = None
+
+
+class InterviewInvitationOut(ORMModel):
+    id: int
+    enterprise_id: int
+    student_id: int
+    message: Optional[str] = None
+    status: str
+    sent_at: datetime
+    responded_at: Optional[datetime] = None
 
 
 # ---------------- passport

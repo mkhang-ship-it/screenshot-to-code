@@ -36,7 +36,7 @@ export function StatCard({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="text-sm font-medium text-muted">{label}</div>
-          <div className="mt-1 text-[28px] font-extrabold leading-tight text-ink">
+          <div className="mt-1 text-[28px] font-extrabold leading-tight text-ink tabular-nums">
             {value}
           </div>
           {delta && (
@@ -109,8 +109,8 @@ export function Badge({
 
 export function Loading({ label = "Đang tải..." }: { label?: string }) {
   return (
-    <div className="flex items-center justify-center py-16 text-sm text-muted">
-      <span className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-line-strong border-t-portal" />
+    <div className="flex items-center justify-center py-16 text-sm text-muted" aria-live="polite" aria-busy="true">
+      <span className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-line-strong border-t-portal" aria-hidden="true" />
       {label}
     </div>
   );

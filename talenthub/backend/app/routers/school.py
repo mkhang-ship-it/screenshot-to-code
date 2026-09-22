@@ -9,10 +9,12 @@ from ..database import get_db
 from ..models import (
     Activity,
     ActivityRegistration,
+    Badge,
     ClassGroup,
     Evaluation,
     Skill,
     Student,
+    StudentBadge,
     StudentSkill,
     Teacher,
     User,
@@ -147,26 +149,181 @@ def talent_analysis(db: Session = Depends(get_db)):
     }
 
 
+@router.get("/analysis")
+def analysis(db: Session = Depends(get_db)):
+    """Alias for /talent-analysis — slide 25."""
+    return talent_analysis(db)
+
+
 @router.get("/reports")
-def reports(db: Session = Depends(get_db)):
-    """Dữ liệu báo cáo (slide 26) — frontend xuất CSV/XLSX/PDF từ đây."""
-    students = db.query(Student).order_by(Student.grade.asc(), Student.talent_score.desc()).all()
-    return [
-        {
-            "id": s.id,
-            "full_name": s.user.full_name,
-            "class_name": s.class_name,
-            "grade": s.grade,
-            "talent_score": s.talent_score,
-            "experience_hours": s.experience_hours,
-        }
-        for s in students
-    ]
+def reports(
+    type: str = "students",
+    format: str = "json",
+    db: Session = Depends(get_db),
+):
+    """
+    Dữ liệu báo cáo (slide 26).
+    type: students|activities|evaluations|badges
+    format: json|csv
+    """
+    if type == "students":
+        students = db.query(Student).order_by(Student.grade.asc(), Student.talent_score.desc()).all()
+        rows = [
+            {
+                "id": s.id,
+                "full_name": s.user.full_name,
+                "class_name": s.class_name,
+                "grade": s.grade,
+                "talent_score": s.talent_score,
+                "experience_hours": s.experience_hours,
+            }
+            for s in students
+        ]
+        filename = "bao-cao-hoc-sinh"
+    elif type == "activities":
+        regs = (
+            db.query(
+                ActivityRegistration.id,
+                ActivityRegistration.student_id,
+                ActivityRegistration.activity_id,
+                ActivityRegistration.role,
+                ActivityRegistration.status,
+                ActivityRegistration.hours,
+                ActivityRegistration.registered_at,
+                Student.class_name,
+                Student.grade,
+                User.full_name,
+                Activity.title.label("activity_title"),
+                Activity.field.label("activity_field"),
+            )
+            .join(Student, ActivityRegistration.student_id == Student.id)
+            .join(User, Student.id == User.id)
+            .join(Activity, ActivityRegistration.activity_id == Activity.id)
+            .all()
+        )
+        rows = [
+            {
+                "id": r.id,
+                "student_id": r.student_id,
+                "full_name": r.full_name,
+                "class_name": r.class_name,
+                "grade": r.grade,
+                "activity_id": r.activity_id,
+                "activity_title": r.activity_title,
+                "activity_field": r.activity_field,
+                "role": r.role,
+                "status": r.status,
+                "hours": r.hours,
+                "registered_at": r.registered_at.strftime("%Y-%m-%d %H:%M") if r.registered_at else "",
+            }
+            for r in regs
+        ]
+        filename = "bao-cao-hoat-dong"
+    elif type == "evaluations":
+        evals = (
+            db.query(
+                Evaluation.id,
+                Evaluation.student_id,
+                Evaluation.activity_id,
+                Evaluation.chuyen_mon,
+                Evaluation.sang_tao,
+                Evaluation.lam_viec_nhom,
+                Evaluation.ky_luat,
+                Evaluation.comment,
+                Evaluation.evaluated_at,
+                Student.class_name,
+                Student.grade,
+                User.full_name,
+                Activity.title.label("activity_title"),
+            )
+            .join(Student, Evaluation.student_id == Student.id)
+            .join(User, Student.id == User.id)
+            .join(Activity, Evaluation.activity_id == Activity.id)
+            .all()
+        )
+        rows = [
+            {
+                "id": e.id,
+                "student_id": e.student_id,
+                "full_name": e.full_name,
+                "class_name": e.class_name,
+                "grade": e.grade,
+                "activity_id": e.activity_id,
+                "activity_title": e.activity_title,
+                "chuyen_mon": e.chuyen_mon,
+                "sang_tao": e.sang_tao,
+                "lam_viec_nhom": e.lam_viec_nhom,
+                "ky_luat": e.ky_luat,
+                "total": round(e.chuyen_mon + e.sang_tao + e.lam_viec_nhom + e.ky_luat, 1),
+                "comment": e.comment or "",
+                "evaluated_at": e.evaluated_at.strftime("%Y-%m-%d %H:%M") if e.evaluated_at else "",
+            }
+            for e in evals
+        ]
+        filename = "bao-cao-diem-danh-gia"
+    elif type == "badges":
+        badges = (
+            db.query(
+                StudentBadge.id,
+                StudentBadge.student_id,
+                StudentBadge.badge_id,
+                StudentBadge.earned_at,
+                Student.class_name,
+                Student.grade,
+                User.full_name,
+                Badge.code.label("badge_code"),
+                Badge.name.label("badge_name"),
+                Badge.min_hours.label("badge_min_hours"),
+            )
+            .join(Student, StudentBadge.student_id == Student.id)
+            .join(User, Student.id == User.id)
+            .join(Badge, StudentBadge.badge_id == Badge.id)
+            .all()
+        )
+        rows = [
+            {
+                "id": sb.id,
+                "student_id": sb.student_id,
+                "full_name": sb.full_name,
+                "class_name": sb.class_name,
+                "grade": sb.grade,
+                "badge_id": sb.badge_id,
+                "badge_code": sb.badge_code,
+                "badge_name": sb.badge_name,
+                "badge_min_hours": sb.badge_min_hours,
+                "earned_at": sb.earned_at.strftime("%Y-%m-%d %H:%M") if sb.earned_at else "",
+            }
+            for sb in badges
+        ]
+        filename = "bao-cao-huy-hieu"
+    else:
+        rows = []
+        filename = "bao-cao"
+
+    if format == "csv":
+        from fastapi.responses import StreamingResponse
+        import io
+
+        if not rows:
+            return StreamingResponse(io.StringIO("\ufeff"), media_type="text/csv")
+
+        header = list(rows[0].keys())
+        lines = [",".join(header)]
+        for row in rows:
+            lines.append(",".join(str(row.get(h, "")) for h in header))
+        csv_content = "\ufeff" + "\n".join(lines)
+        return StreamingResponse(
+            io.StringIO(csv_content),
+            media_type="text/csv; charset=utf-8",
+            headers={"Content-Disposition": f'attachment; filename="{filename}.csv"'},
+        )
+
+    return rows
 
 
 @router.get("/classes")
 def classes(db: Session = Depends(get_db)):
-    """Tổng quan khối & lớp (slide 27): GVCN + top 5 lớp xuất sắc."""
+    """Tổng quan khối & lớp (slide 27): GVCN + top 5 lớp xuất sắc + tỷ lệ hoàn thành hoạt động."""
     rows = (
         db.query(Student.class_name, Student.grade, func.count(Student.id), func.avg(Student.talent_score), func.sum(Student.experience_hours))
         .group_by(Student.class_name, Student.grade)
@@ -182,6 +339,23 @@ def classes(db: Session = Depends(get_db)):
                 name = t.user.full_name
         homerooms[(cg.name, cg.grade)] = name
 
+    # Tỷ lệ hoàn thành hoạt động theo lớp
+    completion = (
+        db.query(
+            Student.class_name,
+            Student.grade,
+            func.count(ActivityRegistration.id).label("total_regs"),
+            func.count(ActivityRegistration.id).filter(ActivityRegistration.hours > 0).label("completed_regs"),
+        )
+        .join(ActivityRegistration, ActivityRegistration.student_id == Student.id)
+        .group_by(Student.class_name, Student.grade)
+        .all()
+    )
+    completion_map = {
+        (name, grade): (round(completed / total * 100) if total else 0)
+        for name, grade, total, completed in completion
+    }
+
     class_list = [
         {
             "name": name,
@@ -190,6 +364,7 @@ def classes(db: Session = Depends(get_db)):
             "avg_score": round(avg or 0, 1),
             "total_hours": float(hours or 0),
             "homeroom": homerooms.get((name, grade), "—"),
+            "completion_rate": completion_map.get((name, grade), 0),
         }
         for name, grade, cnt, avg, hours in rows
     ]

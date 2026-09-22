@@ -10,6 +10,7 @@ interface ClassInfo {
   avg_score: number;
   total_hours: number;
   homeroom: string;
+  completion_rate: number;
 }
 
 interface ClassesResponse {
@@ -147,10 +148,14 @@ export default function Classes() {
                   <div className="mt-4 h-2 rounded-full bg-canvas-soft overflow-hidden">
                     <div
                       className="h-full rounded-full hero-gradient"
-                      style={{ width: `${Math.min(100, (c.total_hours / 20) * 100)}%` }}
+                      style={{ width: `${c.completion_rate}%` }}
                     />
                   </div>
                   <div className="mt-2 flex justify-between text-xs text-muted-light">
+                    <span>Tỷ lệ hoàn thành hoạt động</span>
+                    <span>{c.completion_rate}%</span>
+                  </div>
+                  <div className="mt-1 flex justify-between text-xs text-muted-light">
                     <span>Điểm TB năng lực</span>
                     <span>{c.total_hours}h trải nghiệm</span>
                   </div>

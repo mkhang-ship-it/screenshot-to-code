@@ -110,42 +110,45 @@ export default function Discover() {
     return (
       <div>
         <PageHeader title="Khám phá năng khiếu" subtitle="Bộ test khoa học giúp bạn hiểu chính mình hơn (slide 12)." />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          {TESTS.map((t) => {
-            const done = assessments?.some((a) => a.test_type === t.key);
-            return (
-              <div key={t.key} className="text-center cursor-pointer hover:shadow-md transition-shadow" onClick={() => startTest(t.key)}>
-                <Card className="h-full">
-                  <div className={`mx-auto h-14 w-14 rounded-2xl ${t.chip} text-white flex items-center justify-center text-2xl shadow`}>{t.icon}</div>
-                  <div className="mt-2 font-bold text-ink">{t.name}</div>
-                  <div className="text-xs text-muted mt-1">{t.desc}</div>
-                  {done && <span className="mt-2 inline-block text-[11px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 font-medium">✓ Đã làm</span>}
-                  <button className="mt-3 w-full text-xs px-3 py-2 rounded-full cta-gradient text-white font-semibold">
-                    {done ? "Làm lại" : "Bắt đầu"}
-                  </button>
-                </Card>
+        <section aria-labelledby="tests-heading">
+          <h2 id="tests-heading" className="sr-only">Chọn bài test năng khiếu</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6" role="list">
+            {TESTS.map((t) => {
+              const done = assessments?.some((a) => a.test_type === t.key);
+              return (
+                <article key={t.key} className="text-center" role="listitem">
+                  <Card className="h-full">
+                    <div className={`mx-auto h-14 w-14 rounded-2xl ${t.chip} text-white flex items-center justify-center text-2xl shadow`} aria-hidden="true">{t.icon}</div>
+                    <h3 className="mt-2 font-bold text-ink">{t.name}</h3>
+                    <div className="text-xs text-muted mt-1">{t.desc}</div>
+                    {done && <span className="mt-2 inline-block text-[11px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 font-medium" aria-label={`${t.name} đã hoàn thành`}>✓ Đã làm</span>}
+                    <button onClick={() => startTest(t.key)} className="mt-3 w-full text-xs px-3 py-2 rounded-full cta-gradient text-white font-semibold" aria-label={done ? `Làm lại bài test ${t.name}` : `Bắt đầu bài test ${t.name}`}>
+                      {done ? "Làm lại" : "Bắt đầu"}
+                    </button>
+                  </Card>
+                </article>
+              );
+            })}
+          </div>
+          {assessments && assessments.length > 0 && (
+            <Card>
+              <h2 className="font-bold text-ink mb-2 flex items-center gap-2">
+                <GraduationCap size={18} className="text-portal" aria-hidden="true" /> Kết quả đã có
+              </h2>
+              <div className="flex flex-wrap gap-2" role="list" aria-label="Kết quả test đã hoàn thành">
+                {assessments.map((a, i) => {
+                  const r = JSON.parse(a.result);
+                  const t = TESTS.find((x) => x.key === a.test_type);
+                  return (
+                    <span key={i} role="listitem" className="text-xs px-3 py-1.5 rounded-full bg-portal-soft text-portal-dark font-medium">
+                      {t?.name ?? a.test_type}: {r.holland ?? r.type} — {r.score}/100
+                    </span>
+                  );
+                })}
               </div>
-            );
-          })}
-        </div>
-        {assessments && assessments.length > 0 && (
-          <Card>
-            <h2 className="font-bold text-ink mb-2 flex items-center gap-2">
-              <GraduationCap size={18} className="text-portal" /> Kết quả đã có
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              {assessments.map((a, i) => {
-                const r = JSON.parse(a.result);
-                const t = TESTS.find((x) => x.key === a.test_type);
-                return (
-                  <span key={i} className="text-xs px-3 py-1.5 rounded-full bg-portal-soft text-portal-dark font-medium">
-                    {t?.name ?? a.test_type}: {r.holland ?? r.type} — {r.score}/100
-                  </span>
-                );
-              })}
-            </div>
-          </Card>
-        )}
+            </Card>
+          )}
+        </section>
       </div>
     );
   }
@@ -162,7 +165,7 @@ export default function Discover() {
         subtitle={`Câu ${qIdx + 1}/${questions.length} — chọn mức phù hợp nhất (slide 12).`}
       />
       {/* Progress bar */}
-      <div className="mb-6">
+      <div className="mb-6" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} aria-label="Tiến độ làm bài test">
         <div className="flex justify-between text-xs text-muted mb-1">
           <span>{qIdx + 1}/{questions.length}</span>
           <span>{progress}%</span>
@@ -176,34 +179,39 @@ export default function Discover() {
       <Card className="mb-6">
         <div className="text-xs text-muted uppercase tracking-wider mb-2">Câu {qIdx + 1}</div>
         <h2 className="text-lg font-bold text-ink mb-5">{q.text}</h2>
-        <div className="space-y-2">
-          {q.options.map((opt, i) => (
-            <button
-              key={i}
-              onClick={() => {
-                const a = [...answers]; a[qIdx] = i; setAnswers(a);
-              }}
-              className={`w-full text-left rounded-xl px-4 py-3 text-sm border transition ${
-                answers[qIdx] === i ? "cta-gradient text-white border-transparent shadow" : "border-line bg-white hover:bg-canvas-soft text-ink"
-              }`}
-            >
-              {opt}
-            </button>
-          ))}
-        </div>
+        <fieldset className="space-y-2">
+          <legend className="sr-only">Chọn một đáp án</legend>
+          <div role="radiogroup" aria-label={q.text}>
+            {q.options.map((opt, i) => (
+              <button
+                key={i}
+                role="radio"
+                aria-checked={answers[qIdx] === i}
+                onClick={() => {
+                  const a = [...answers]; a[qIdx] = i; setAnswers(a);
+                }}
+                className={`w-full text-left rounded-xl px-4 py-3 text-sm border transition ${
+                  answers[qIdx] === i ? "cta-gradient text-white border-transparent shadow" : "border-line bg-white hover:bg-canvas-soft text-ink"
+                }`}
+              >
+                {opt}
+              </button>
+            ))}
+          </div>
+        </fieldset>
       </Card>
 
       {/* Nút điều hướng */}
-      <div className="flex justify-between">
-        <button onClick={goPrev} disabled={qIdx === 0} className="text-sm px-4 py-2 rounded-full border border-line font-semibold text-ink hover:bg-canvas-soft disabled:opacity-40">
+      <div className="flex justify-between" role="group" aria-label="Điều hướng bài test">
+        <button onClick={goPrev} disabled={qIdx === 0} className="text-sm px-4 py-2 rounded-full border border-line font-semibold text-ink hover:bg-canvas-soft disabled:opacity-40" aria-label="Câu trước">
           ← Quay lại
         </button>
         {qIdx < questions.length - 1 ? (
-          <button onClick={goNext} disabled={answers[qIdx] === -1} className="text-sm px-4 py-2 rounded-full cta-gradient text-white font-semibold disabled:opacity-40">
+          <button onClick={goNext} disabled={answers[qIdx] === -1} className="text-sm px-4 py-2 rounded-full cta-gradient text-white font-semibold disabled:opacity-40" aria-label="Câu tiếp theo">
             Tiếp theo →
           </button>
         ) : (
-          <button onClick={goNext} disabled={answers[qIdx] === -1 || busy} className="text-sm px-4 py-2 rounded-full cta-gradient text-white font-semibold disabled:opacity-40">
+          <button onClick={goNext} disabled={answers[qIdx] === -1 || busy} className="text-sm px-4 py-2 rounded-full cta-gradient text-white font-semibold disabled:opacity-40" aria-label={busy ? "Đang tính kết quả" : "Xem kết quả"}>
             {busy ? "Đang tính..." : "Xem kết quả ✓"}
           </button>
         )}

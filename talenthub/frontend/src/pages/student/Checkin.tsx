@@ -92,23 +92,27 @@ export default function Checkin() {
               Đưa cho ban tổ chức scan, hoặc nhập mã bên dưới để check-in.
             </p>
 
+            <label htmlFor="qr-input" className="sr-only">Nhập mã QR để check-in</label>
             <input
+              id="qr-input"
               value={qr}
               onChange={(e) => setQr(e.target.value)}
               placeholder="Nhập mã QR (demo: bỏ trống rồi bấm)"
-              className="mt-4 w-full max-w-xs text-sm px-3 py-2.5 rounded-xl border-0 bg-white text-ink outline-none"
+              className="mt-4 w-full max-w-xs text-sm px-3 py-2.5 rounded-xl border-0 bg-white text-ink outline-none focus:ring-2 focus:ring-white"
+              autoComplete="off"
             />
             <button
               onClick={doCheckin}
               disabled={busy}
               className="mt-3 max-w-xs w-full text-sm py-2.5 rounded-full font-semibold bg-white text-ink hover:bg-white/90 disabled:opacity-50 flex items-center justify-center gap-2"
+              aria-busy={busy}
             >
-              <ScanLine size={16} />
+              <ScanLine size={16} aria-hidden="true" />
               {busy ? "Đang xác nhận..." : "Mở camera scan"}
             </button>
             {result && (
-              <div className="mt-3 max-w-xs w-full rounded-xl bg-white/20 px-3 py-2 text-sm font-semibold flex items-center justify-center gap-2">
-                <CheckCircle2 size={16} />
+              <div className="mt-3 max-w-xs w-full rounded-xl bg-white/20 px-3 py-2 text-sm font-semibold flex items-center justify-center gap-2" role="status" aria-live="polite">
+                <CheckCircle2 size={16} aria-hidden="true" />
                 {result.message} · +{result.hours}h
               </div>
             )}
@@ -121,30 +125,34 @@ export default function Checkin() {
           {/* Lịch sử check-in (slide 14) */}
           <Card>
             <div className="flex items-center gap-2 mb-3">
-              <History size={18} className="text-portal" />
+              <History size={18} className="text-portal" aria-hidden="true" />
               <h3 className="font-semibold text-ink">Lịch sử check-in</h3>
             </div>
             {!history ? (
               <Loading />
             ) : history.length === 0 ? (
-              <p className="text-sm text-muted">Chưa có lượt check-in nào.</p>
+              <div className="text-center py-8" role="status" aria-live="polite">
+                <History size={32} className="mx-auto text-muted-light" aria-hidden="true" />
+                <p className="mt-2 text-sm text-muted">Chưa có lượt check-in nào.</p>
+                <p className="mt-1 text-xs text-muted-light">Quét QR tại hoạt động đầu tiên để bắt đầu tích lũy giờ.</p>
+              </div>
             ) : (
-              <ul className="space-y-2 max-h-96 overflow-y-auto">
+              <ul className="space-y-2 max-h-96 overflow-y-auto" role="list" aria-label="Danh sách check-in">
                 {history.map((h) => (
                   <li
                     key={h.id}
                     className="flex items-center gap-3 text-sm rounded-xl border border-line px-3 py-2.5"
                   >
-                    <span className="h-9 w-9 shrink-0 rounded-full bg-gradient-to-br from-violet-500 to-purple-700 text-white flex items-center justify-center">
+                    <span className="h-9 w-9 shrink-0 rounded-full bg-gradient-to-br from-violet-500 to-purple-700 text-white flex items-center justify-center" aria-hidden="true">
                       <History size={15} />
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="font-semibold text-ink truncate">{h.activity}</div>
-                      <div className="text-xs text-muted-light">
+                      <div className="text-xs text-muted-light tabular-nums">
                         {h.checked_in_at}
                       </div>
                     </div>
-                    <span className="text-sm font-bold text-pink-600">+{h.hours_added}h</span>
+                    <span className="text-sm font-bold text-pink-600 tabular-nums">+{h.hours_added}h</span>
                   </li>
                 ))}
               </ul>

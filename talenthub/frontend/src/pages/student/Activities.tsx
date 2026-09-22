@@ -35,6 +35,7 @@ export default function Activities() {
   const [field, setField] = useState("");
   const [q, setQ] = useState("");
   const [error, setError] = useState("");
+  const [registeringId, setRegisteringId] = useState<number | null>(null);
 
   const load = useCallback(() => {
     const params = new URLSearchParams();
@@ -50,12 +51,15 @@ export default function Activities() {
   }, [load]);
 
   const register = async (id: number) => {
+    setRegisteringId(id);
     setError("");
     try {
       await post(`/student/activities/${id}/register`, {});
       load();
     } catch (e) {
       setError(String((e as Error).message || e));
+    } finally {
+      setRegisteringId(null);
     }
   };
 
@@ -71,12 +75,14 @@ export default function Activities() {
           title="Đăng ký hoạt động"
           subtitle="Săn slot các lab, câu lạc bộ, cuộc thi đang mở."
         />
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Lọc theo lĩnh vực">
           {filters.map((f) => (
             <button
               key={f}
               onClick={() => setField(f)}
-              className={`text-xs px-3.5 py-1.5 rounded-full font-semibold border ${
+              aria-pressed={field === f}
+              aria-label={f === "" ? "Tất cả lĩnh vực" : `Lĩnh vực ${FIELD_NAMES[f]}`}
+              className={`text-xs px-3.5 py-1.5 rounded-full font-semibold border transition-colors ${
                 field === f
                   ? "bg-ink text-white border-ink"
                   : "bg-white text-muted border-line hover:border-portal"
@@ -89,12 +95,15 @@ export default function Activities() {
       </div>
 
       <div className="flex rounded-xl bg-white border border-line overflow-hidden items-center px-3 mb-6 max-w-sm">
-        <Search size={15} className="text-muted-light" />
+        <label htmlFor="activity-search" className="sr-only">Tìm hoạt động</label>
+        <Search size={15} className="text-muted-light" aria-hidden="true" />
         <input
+          id="activity-search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Tìm hoạt động..."
           className="px-2 py-2 text-sm outline-none w-full bg-transparent"
+          autoComplete="off"
         />
       </div>
 
@@ -131,10 +140,10 @@ export default function Activities() {
                 </div>
                 <button
                   onClick={() => register(a.id)}
-                  disabled={a.registered || a.slots_left <= 0}
+                  disabled={a.registered || a.slots_left <= 0 || registeringId === a.id}
                   className="mt-3 w-full text-sm py-2 rounded-full font-semibold text-white cta-gradient disabled:opacity-40"
                 >
-                  {a.registered ? "Đã đăng ký ✓" : "Đăng ký ngay"}
+                  {registeringId === a.id ? "Đang đăng ký..." : a.registered ? "Đã đăng ký ✓" : "Đăng ký ngay"}
                 </button>
               </div>
             </div>

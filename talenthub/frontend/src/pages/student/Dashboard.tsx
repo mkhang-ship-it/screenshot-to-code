@@ -114,7 +114,7 @@ export default function Dashboard() {
       <div className="mt-6">
         <Card>
           <div className="flex items-center gap-2 mb-3">
-            <CalendarDays size={18} className="text-portal" />
+            <CalendarDays size={18} className="text-portal" aria-hidden="true" />
             <h2 className="font-semibold text-ink">Hoạt động của bạn</h2>
           </div>
           {data.activities.length === 0 ? (
@@ -122,14 +122,14 @@ export default function Dashboard() {
               Bạn chưa tham gia hoạt động nào — khám phá sân chơi ngay!
             </p>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto" role="region" aria-label="Danh sách hoạt động đã tham gia" tabIndex={0}>
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left text-muted-light text-xs uppercase tracking-wider">
-                    <th className="pb-2">Hoạt động</th>
-                    <th className="pb-2">Lĩnh vực</th>
-                    <th className="pb-2">Trạng thái</th>
-                    <th className="pb-2 text-right">Giờ tích lũy</th>
+                    <th className="pb-2" scope="col">Hoạt động</th>
+                    <th className="pb-2" scope="col">Lĩnh vực</th>
+                    <th className="pb-2" scope="col">Trạng thái</th>
+                    <th className="pb-2 text-right" scope="col">Giờ tích lũy</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -142,7 +142,7 @@ export default function Dashboard() {
                           {a.status}
                         </span>
                       </td>
-                      <td className="py-2.5 text-right font-medium">{a.hours}h</td>
+                      <td className="py-2.5 text-right font-medium tabular-nums">{a.hours}h</td>
                     </tr>
                   ))}
                 </tbody>

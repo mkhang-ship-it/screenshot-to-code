@@ -26,8 +26,7 @@ type WebSocketResponse = {
     | "toolStart"
     | "toolResult";
   value?: string;
-  data?: any;
-  eventId?: string;
+  data?: any;   eventId?: string; // eslint-disable-line @typescript-eslint/no-explicit-any
   variantIndex: number;
 };
 
@@ -41,8 +40,8 @@ interface CodeGenerationCallbacks {
   onVariantModels: (models: string[]) => void;
   onThinking: (content: string, variantIndex: number, eventId?: string) => void;
   onAssistant: (content: string, variantIndex: number, eventId?: string) => void;
-  onToolStart: (data: any, variantIndex: number, eventId?: string) => void;
-  onToolResult: (data: any, variantIndex: number, eventId?: string) => void;
+  onToolStart: (data: any, variantIndex: number, eventId?: string) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
+  onToolResult: (data: any, variantIndex: number, eventId?: string) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
   onCancel: (
     reason: "user_cancelled" | "request_failed" | "connection_error",
     errorMessage?: string

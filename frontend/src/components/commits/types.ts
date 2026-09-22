@@ -13,8 +13,8 @@ export type AgentEvent = {
   status: AgentEventStatus;
   content?: string;
   toolName?: string;
-  input?: any;
-  output?: any;
+    input?: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+    output?: any; // eslint-disable-line @typescript-eslint/no-explicit-any
   startedAt: number;
   endedAt?: number;
 };

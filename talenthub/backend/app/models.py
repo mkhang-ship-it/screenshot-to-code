@@ -319,6 +319,8 @@ class Project(Base):
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     owner_student_id: Mapped[int] = mapped_column(ForeignKey("students.id"), index=True)
     status: Mapped[str] = mapped_column(String(20), default="active")
+    funding_goal: Mapped[float] = mapped_column(Float, default=0.0)  # VNĐ
+    funded_total: Mapped[float] = mapped_column(Float, default=0.0)  # VNĐ đã tài trợ
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now()
     )
@@ -343,6 +345,7 @@ class InternshipPost(Base):
     )
     title: Mapped[str] = mapped_column(String(200))
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    required_skills: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     slots: Mapped[int] = mapped_column(Integer, default=3)
     status: Mapped[str] = mapped_column(String(20), default="open")
     deadline: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
@@ -372,10 +375,27 @@ class Sponsorship(Base):
     )
     project_id: Mapped[int] = mapped_column(ForeignKey("projects.id"), index=True)
     amount: Mapped[float] = mapped_column(Float, default=0.0)
+    conditions: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     status: Mapped[str] = mapped_column(String(20), default="pending")
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now()
     )
+
+
+class InterviewInvitation(Base):
+    __tablename__ = "interview_invitations"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    enterprise_id: Mapped[int] = mapped_column(
+        ForeignKey("enterprises.id"), index=True
+    )
+    student_id: Mapped[int] = mapped_column(ForeignKey("students.id"), index=True)
+    message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    status: Mapped[str] = mapped_column(String(20), default="sent")  # sent, accepted, declined
+    sent_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=func.now()
+    )
+    responded_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
 
 # ---------------------------------------------------------------- ai

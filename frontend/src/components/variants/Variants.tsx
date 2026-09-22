@@ -112,7 +112,9 @@ function Variants() {
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [variants.length, commit?.isCommitted, selectedVariantIndex, head]);
+  },
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  [variants.length, commit?.isCommitted, selectedVariantIndex, head]);
 
   if (head === null || !commit) {
     return null;
