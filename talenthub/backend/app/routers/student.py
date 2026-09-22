@@ -1,4 +1,5 @@
 """HỌC SINH — dashboard, hồ sơ, khám phá, hoạt động, check-in QR, huy hiệu, lộ trình AI."""
+import json
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func, or_
 from sqlalchemy.orm import Session, selectinload
@@ -19,8 +20,10 @@ from ..models import (
     StudentBadge,
     StudentSkill,
     TalentAssessment,
+    TestQuestion,
     User,
 )
+from ..schemas import ComputeIn, ComputeOut, QuestionOut
 
 router = APIRouter(prefix="/student", tags=["student"])
 
@@ -209,6 +212,131 @@ def submit_assessment(payload: dict, student_id: int = 1, db: Session = Depends(
         db.add(row)
     db.commit()
     return {"ok": True, "test_type": test_type}
+
+
+# ---------- Ngân hàng câu hỏi (48 câu — 12 mỗi loại) ----------
+QUESTION_BANK: dict[str, list[dict]] = {
+    "holland": [
+        {"order": 1, "text": "Tôi thích giải quyết các vấn đề kỹ thuật phức tạp hơn là thuyết phục người khác.", "scoring": '{"poles":["Kỹ thuật"],"reverse":false}', "order_val": 1},
+        {"order": 2, "text": "Tôi thường xuyên sáng tạo ra những ý tưởng nghệ thuật độc đáo và muốn chia sẻ chúng.", "scoring": '{"poles":["Nghệ thuật"],"reverse":false}', "order_val": 2},
+        {"order": 3, "text": "Tôi muốn giúp đỡ người khác và quan tâm đến cộng đồng hơn là theo đuổi sự nghiệp cá nhân.", "scoring": '{"poles":["Xã hội"],"reverse":false}', "order_val": 3},
+        {"order": 4, "text": "Tôi thích làm việc với dữ liệu, con số và phân tích thống kê.", "scoring": '{"poles":["Doanh nghiệp"],"reverse":false}', "order_val": 4},
+        {"order": 5, "text": "Tôi thích khám phá thiên nhiên, động vật và môi trường sống.", "scoring": '{"poles":["Tự nhiên"],"reverse":false}', "order_val": 5},
+        {"order": 6, "text": "Tôi thích lãnh đạo, tổ chức và điều hành nhóm.", "scoring": '{"poles":["Doanh nghiệp"],"reverse":false}', "order_val": 6},
+        {"order": 7, "text": "Tôi thích viết lách, vẽ tranh hoặc biểu diễn nghệ thuật.", "scoring": '{"poles":["Nghệ thuật"],"reverse":false}', "order_val": 7},
+        {"order": 8, "text": "Tôi thích lập trình, xây dựng hệ thống và giải thuật.", "scoring": '{"poles":["Kỹ thuật"],"reverse":false}', "order_val": 8},
+        {"order": 9, "text": "Tôi thích nói chuyện, tư vấn và hỗ trợ mọi người.", "scoring": '{"poles":["Xã hội"],"reverse":false}', "order_val": 9},
+        {"order": 10, "text": "Tôi thích nghiên cứu lý thuyết và tìm hiểu sâu về khoa học.", "scoring": '{"poles":["Học thuật"],"reverse":false}', "order_val": 10},
+        {"order": 11, "text": "Tôi thích thiết kế, trang trí và tạo ra sản phẩm đẹp.", "scoring": '{"poles":["Nghệ thuật"],"reverse":false}', "order_val": 11},
+        {"order": 12, "text": "Tôi thích làm việc thực hành, thí nghiệm và chế tạo.", "scoring": '{"poles":["Kỹ thuật"],"reverse":false}', "order_val": 12},
+    ],
+    "disc": [
+        {"order": 1, "text": "Tôi là người hướng nội, thích làm việc một mình và suy nghĩ thầm lặng.", "scoring": '{"poles":["I"],"reverse":false}', "order_val": 1},
+        {"order": 2, "text": "Tôi là người cẩn thận, thích tuân thủ quy tắc và quy trình.", "scoring": '{"poles":["C"],"reverse":false}', "order_val": 2},
+        {"order": 3, "text": "Tôi là người năng động, thích tác động và thuyết phục người khác.", "scoring": '{"poles":["D"],"reverse":false}', "order_val": 3},
+        {"order": 4, "text": "Tôi là người sáng tạo, thích thử nghiệm và đổi mới.", "scoring": '{"poles":["I"],"reverse":false}', "order_val": 4},
+        {"order": 5, "text": "Tôi rất có tổ chức, thích mọi thứ nằm gọn trong kế hoạch.", "scoring": '{"poles":["C"],"reverse":false}', "order_val": 5},
+        {"order": 6, "text": "Tôi thích dẫn đầu và ra quyết định nhanh chóng.", "scoring": '{"poles":["D"],"reverse":false}', "order_val": 6},
+        {"order": 7, "text": "Tôi thích giúp đỡ và hỗ trợ người khác phát triển.", "scoring": '{"poles":["S"],"reverse":false}', "order_val": 7},
+        {"order": 8, "text": "Tôi thích phân tích và tìm hiểu sâu trước khi hành động.", "scoring": '{"poles":["C"],"reverse":false}', "order_val": 8},
+        {"order": 9, "text": "Tôi thích thể hiện bản thân và thu hút sự chú ý.", "scoring": '{"poles":["D"],"reverse":false}', "order_val": 9},
+        {"order": 10, "text": "Tôi kiên nhẫn, hợp tác và thích làm việc nhóm.", "scoring": '{"poles":["S"],"reverse":false}', "order_val": 10},
+        {"order": 11, "text": "Tôi thích suy nghĩ trừu tượng và tìm ra các mô hình mới.", "scoring": '{"poles":["I"],"reverse":false}', "order_val": 11},
+        {"order": 12, "text": "Tôi thích quan tâm, chăm sóc và đồng cảm với người xung quanh.", "scoring": '{"poles":["S"],"reverse":false}', "order_val": 12},
+    ],
+    "mbti": [
+        {"order": 1, "text": "Tôi thu được năng lượng khi ở một mình hơn là ở nơi đông người.", "scoring": '{"poles":["I"],"reverse":false}', "order_val": 1},
+        {"order": 2, "text": "Tôi thích lên kế hoạch chi tiết trước khi thực hiện.", "scoring": '{"poles":["J"],"reverse":false}', "order_val": 2},
+        {"order": 3, "text": "Tôi thích phân tích logic hơn là dựa vào cảm xúc.", "scoring": '{"poles":["T"],"reverse":false}', "order_val": 3},
+        {"order": 4, "text": "Tôi thích quan sát và thu thập thông tin cụ thể.", "scoring": '{"poles":["S"],"reverse":false}', "order_val": 4},
+        {"order": 5, "text": "Tôi thích suy nghĩ về tương lai và các khả năng.", "scoring": '{"poles":["N"],"reverse":false}', "order_val": 5},
+        {"order": 6, "text": "Tôi thích linh hoạt, spontaneity hơn là theo lịch trình.", "scoring": '{"poles":["P"],"reverse":false}', "order_val": 6},
+        {"order": 7, "text": "Tôi quyết định dựa trên giá trị và cảm xúc cá nhân.", "scoring": '{"poles":["F"],"reverse":false}', "order_val": 7},
+        {"order": 8, "text": "Tôi thích học hỏi qua trải nghiệm thực tế.", "scoring": '{"poles":["S"],"reverse":false}', "order_val": 8},
+        {"order": 9, "text": "Tôi thích suy nghĩ trừu tượng và lý thuyết.", "scoring": '{"poles":["N"],"reverse":false}', "order_val": 9},
+        {"order": 10, "text": "Tôi thích hoàn thành công việc đúng hạn.", "scoring": '{"poles":["J"],"reverse":false}', "order_val": 10},
+        {"order": 11, "text": "Tôi là người hướng ngoại, năng lượng đến từ giao tiếp.", "scoring": '{"poles":["E"],"reverse":false}', "order_val": 11},
+        {"order": 12, "text": "Tôi thích linh hoạt thích nghi với hoàn cảnh thay vì kiểm soát.", "scoring": '{"poles":["P"],"reverse":false}', "order_val": 12},
+    ],
+    "mi": [
+        {"order": 1, "text": "Tôi giỏi tư duy logic, giải toán và nhận ra các quy luật.", "scoring": '{"poles":["Logic-Toán học"],"reverse":false}', "order_val": 1},
+        {"order": 2, "text": "Tôi có trí nhớ hình ảnh tốt, nhớ bằng hình ảnh hơn lời nói.", "scoring": '{"poles":["Không gian"],"reverse":false}', "order_val": 2},
+        {"order": 3, "text": "Tôi nhạy cảm với âm thanh, giai điệu và nhịp điệu.", "scoring": '{"poles":["Âm nhạc"],"reverse":false}', "order_val": 3},
+        {"order": 4, "text": "Tôi học tốt bằng cách chạm vào, làm thí nghiệm và vận động.", "scoring": '{"poles":["Thể chất"],"reverse":false}', "order_val": 4},
+        {"order": 5, "text": "Tôi giỏi hiểu cảm xúc, động cơ của người khác.", "scoring": '{"poles":["Giao tiếp"],"reverse":false}', "order_val": 5},
+        {"order": 6, "text": "Tôi có tư duy sắc sảo, nhìn thấy mối liên hệ và sự đối lập.", "scoring": '{"poles":["Tự nhiên"],"reverse":false}', "order_val": 6},
+        {"order": 7, "text": "Tôi có khả năng kể chuyện, dùng từ ngữ hiệu quả.", "scoring": '{"poles":["Ngôn ngữ"],"reverse":false}', "order_val": 7},
+        {"order": 8, "text": "Tôi giỏi nhìn tổng thể, tưởng tượng và sáng tạo.", "scoring": '{"poles":["Tồn tại"],"reverse":false}', "order_val": 8},
+        {"order": 9, "text": "Tôi học tốt nhất qua việc nghe giảng và thảo luận.", "scoring": '{"poles":["Âm nhạc"],"reverse":false}', "order_val": 9},
+        {"order": 10, "text": "Tôi giỏi vẽ, thiết kế và nắm bắt không gian 3D.", "scoring": '{"poles":["Không gian"],"reverse":false}', "order_val": 10},
+        {"order": 11, "text": "Tôi giỏi lập kế hoạch, quản lý thời gian và tổ chức.", "scoring": '{"poles":["Logic-Toán học"],"reverse":false}', "order_val": 11},
+        {"order": 12, "text": "Tôi hiểu sâu về thế giới tự nhiên và các hệ thống.", "scoring": '{"poles":["Tự nhiên"],"reverse":false}', "order_val": 12},
+    ],
+}
+
+
+@router.get("/assessments/questions")
+def get_questions(
+    test_type: str,
+    db: Session = Depends(get_db),
+):
+    """Lấy ngân hàng câu hỏi cho 1 loại test (slide 12)."""
+    if test_type not in VALID_TEST_TYPES:
+        raise HTTPException(400, f"test_type phải thuộc {sorted(VALID_TEST_TYPES)}")
+    rows = (
+        db.query(TestQuestion)
+        .filter(TestQuestion.test_type == test_type)
+        .order_by(TestQuestion.order.asc())
+        .all()
+    )
+    if not rows:
+        raise HTTPException(404, f"Chưa có câu hỏi cho {test_type}")
+    return [
+        QuestionOut(
+            id=r.id, test_type=r.test_type, order=r.order,
+            text=r.text, options=json.loads(r.options_json),
+            scoring=json.loads(r.scoring_json),
+        ).model_dump()
+        for r in rows
+    ]
+
+
+@router.post("/assessments/compute", response_model=ComputeOut)
+def compute_assessment(payload: ComputeIn, student_id: int = 1, db: Session = Depends(get_db)):
+    """Tính điểm năng khiếu từ đáp án (slide 12) — server-side."""
+    _get_student(db, student_id)
+    questions = QUESTION_BANK.get(payload.test_type)
+    if not questions:
+        raise HTTPException(400, f"test_type không hợp lệ: {payload.test_type}")
+    if len(payload.answers) != len(questions):
+        raise HTTPException(400, f"Cần {len(questions)} câu trả lời, nhận {len(payload.answers)}")
+    # Tính điểm theo poles
+    poles: dict[str, float] = {}
+    for q, ans in zip(questions, payload.answers):
+        sc = json.loads(q["scoring"])
+        ans_val = ans if 0 <= ans <= 4 else 0
+        for pole in sc["poles"]:
+            pts = (6 - ans_val) if sc.get("reverse") else ans_val
+            poles[pole] = poles.get(pole, 0) + pts
+    # Xếp loại
+    total = sum(poles.values())
+    max_total = len(questions) * 5
+    pct = round(total / max_total * 100) if max_total else 0
+    top_pole = max(poles, key=poles.get) if poles else "Chưa xác định"
+    label = {"I": "Nội tâm - Sáng tạo", "C": "Chặt chẽ - Phân tích", "D": "Dũng cảm - Lãnh đạo",
+             "S": "Chăm sóc - Hỗ trợ", "E": "Hướng ngoại - Năng động", "N": "Tưởng tượng - Trừu tượng",
+             "T": "Logic - Phân tích", "F": "Cảm xúc - Đồng cảm", "J": "Có tổ chức - Kiên định",
+             "P": "Linh hoạt - Mở cửa", "S": "Thực hành - Cụ thể"}.get(top_pole[:2].upper(), top_pole)
+    # Holland nhóm
+    holland_map = {"Kỹ thuật": "Doanh nhân thực hành", "Nghệ thuật": "Người sáng tạo",
+                   "Xã hội": "Người giúp đỡ", "Doanh nghiệp": "Người lãnh đạo",
+                   "Tự nhiên": "Nhà nghiên cứu", "Học thuật": "Nhà tư duy"}
+    result = {"type": top_pole, "score": pct,
+              "poles": {k: round(v, 1) for k, v in sorted(poles.items(), key=lambda x: -x[1])},
+              "holland": holland_map.get(top_pole, top_pole)}
+    return ComputeOut(test_type=payload.test_type, result=result,
+                      label=label,
+                      detail=f"Điểm {pct}/100 — Đặc điểm: {label}")
 
 
 def _xep_loai(total: float) -> str:

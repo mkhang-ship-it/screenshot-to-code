@@ -73,6 +73,28 @@ class EvaluationOut(EvaluationIn, ORMModel):
     total: float = 0
 
 
+# ---------------- assessment (test năng khiếu)
+class QuestionOut(ORMModel):
+    id: int
+    test_type: str
+    order: int
+    text: str
+    options: list[str]
+    scoring: dict
+
+
+class ComputeIn(BaseModel):
+    test_type: str
+    answers: list[int]  # answer index 0-4 per question, ordered by question order
+
+
+class ComputeOut(ORMModel):
+    test_type: str
+    result: dict  # {"type": "E", "top": [...], "poles": {...}, "score": 78}
+    label: str
+    detail: str
+
+
 # ---------------- activity
 class ActivityIn(BaseModel):
     title: str

@@ -144,6 +144,24 @@ class TalentAssessment(Base):
     )
 
 
+class TestQuestion(Base):
+    """Ngân hàng câu hỏi test năng khiếu — thang Likert 1-5.
+
+    options_json: ["Hoàn toàn không đúng", ..., "Hoàn toàn đúng"] (chung, 5 option).
+    scoring_json: {"poles": ["Kỹ thuật", "Nghệ thuật"], "reverse": false}
+      — cộng (6 - answer) vào mỗi pole nếu reverse=true, else cộng answer.
+    """
+
+    __tablename__ = "test_questions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    test_type: Mapped[str] = mapped_column(String(20), index=True)
+    order: Mapped[int] = mapped_column(Integer, default=0)
+    text: Mapped[str] = mapped_column(Text)
+    scoring_json: Mapped[str] = mapped_column(Text, default="{}")
+    options_json: Mapped[str] = mapped_column(Text, default='["Hoàn toàn không đúng","Không đúng","Không chắc","Đúng","Hoàn toàn đúng"]')
+
+
 # ---------------------------------------------------------------- activities
 FIELD_ART = "nghe_thuat"
 FIELD_SPORT = "the_thao"

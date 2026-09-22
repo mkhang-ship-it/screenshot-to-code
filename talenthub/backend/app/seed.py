@@ -36,6 +36,7 @@ from .models import (
     TalentPassport,
     Teacher,
     TeacherClassAssignment,
+    TestQuestion,
     User,
 )
 from .routers.auth import hash_password
@@ -282,6 +283,73 @@ def run():
     for i, s in enumerate(students):
         db.add(TalentAssessment(student_id=s.id, test_type="holland", result_json=json.dumps({"top": ["Kỹ thuật", "Thực hành"] if i % 2 else ["Nghệ thuật", "Sáng tạo"], "score": 78 + i % 20})))
         db.add(TalentAssessment(student_id=s.id, test_type="disc", result_json=json.dumps({"type": "S" if i % 3 == 0 else "C", "score": 72 + i % 10})))
+    db.flush()
+
+    # ---------- ngân hàng câu hỏi test năng khiếu (48 câu — 12 mỗi loại) ----------
+    _Q_BANK: dict[str, list[dict]] = {
+        "holland": [
+            {"order": 1, "text": "Tôi thích giải quyết các vấn đề kỹ thuật phức tạp hơn là thuyết phục người khác.", "scoring": '{"poles":["Kỹ thuật"],"reverse":false}'},
+            {"order": 2, "text": "Tôi thường xuyên sáng tạo ra những ý tưởng nghệ thuật độc đáo và muốn chia sẻ chúng.", "scoring": '{"poles":["Nghệ thuật"],"reverse":false}'},
+            {"order": 3, "text": "Tôi muốn giúp đỡ người khác và quan tâm đến cộng đồng hơn là theo đuổi sự nghiệp cá nhân.", "scoring": '{"poles":["Xã hội"],"reverse":false}'},
+            {"order": 4, "text": "Tôi thích làm việc với dữ liệu, con số và phân tích thống kê.", "scoring": '{"poles":["Doanh nghiệp"],"reverse":false}'},
+            {"order": 5, "text": "Tôi thích khám phá thiên nhiên, động vật và môi trường sống.", "scoring": '{"poles":["Tự nhiên"],"reverse":false}'},
+            {"order": 6, "text": "Tôi thích lãnh đạo, tổ chức và điều hành nhóm.", "scoring": '{"poles":["Doanh nghiệp"],"reverse":false}'},
+            {"order": 7, "text": "Tôi thích viết lách, vẽ tranh hoặc biểu diễn nghệ thuật.", "scoring": '{"poles":["Nghệ thuật"],"reverse":false}'},
+            {"order": 8, "text": "Tôi thích lập trình, xây dựng hệ thống và giải thuật.", "scoring": '{"poles":["Kỹ thuật"],"reverse":false}'},
+            {"order": 9, "text": "Tôi thích nói chuyện, tư vấn và hỗ trợ mọi người.", "scoring": '{"poles":["Xã hội"],"reverse":false}'},
+            {"order": 10, "text": "Tôi thích nghiên cứu lý thuyết và tìm hiểu sâu về khoa học.", "scoring": '{"poles":["Học thuật"],"reverse":false}'},
+            {"order": 11, "text": "Tôi thích thiết kế, trang trí và tạo ra sản phẩm đẹp.", "scoring": '{"poles":["Nghệ thuật"],"reverse":false}'},
+            {"order": 12, "text": "Tôi thích làm việc thực hành, thí nghiệm và chế tạo.", "scoring": '{"poles":["Kỹ thuật"],"reverse":false}'},
+        ],
+        "disc": [
+            {"order": 1, "text": "Tôi là người hướng nội, thích làm việc một mình và suy nghĩ thầm lặng.", "scoring": '{"poles":["I"],"reverse":false}'},
+            {"order": 2, "text": "Tôi là người cẩn thận, thích tuân thủ quy tắc và quy trình.", "scoring": '{"poles":["C"],"reverse":false}'},
+            {"order": 3, "text": "Tôi là người năng động, thích tác động và thuyết phục người khác.", "scoring": '{"poles":["D"],"reverse":false}'},
+            {"order": 4, "text": "Tôi là người sáng tạo, thích thử nghiệm và đổi mới.", "scoring": '{"poles":["I"],"reverse":false}'},
+            {"order": 5, "text": "Tôi rất có tổ chức, thích mọi thứ nằm gọn trong kế hoạch.", "scoring": '{"poles":["C"],"reverse":false}'},
+            {"order": 6, "text": "Tôi thích dẫn đầu và ra quyết định nhanh chóng.", "scoring": '{"poles":["D"],"reverse":false}'},
+            {"order": 7, "text": "Tôi thích giúp đỡ và hỗ trợ người khác phát triển.", "scoring": '{"poles":["S"],"reverse":false}'},
+            {"order": 8, "text": "Tôi thích phân tích và tìm hiểu sâu trước khi hành động.", "scoring": '{"poles":["C"],"reverse":false}'},
+            {"order": 9, "text": "Tôi thích thể hiện bản thân và thu hút sự chú ý.", "scoring": '{"poles":["D"],"reverse":false}'},
+            {"order": 10, "text": "Tôi kiên nhẫn, hợp tác và thích làm việc nhóm.", "scoring": '{"poles":["S"],"reverse":false}'},
+            {"order": 11, "text": "Tôi thích suy nghĩ trừu tượng và tìm ra các mô hình mới.", "scoring": '{"poles":["I"],"reverse":false}'},
+            {"order": 12, "text": "Tôi thích quan tâm, chăm sóc và đồng cảm với người xung quanh.", "scoring": '{"poles":["S"],"reverse":false}'},
+        ],
+        "mbti": [
+            {"order": 1, "text": "Tôi thu được năng lượng khi ở một mình hơn là ở nơi đông người.", "scoring": '{"poles":["I"],"reverse":false}'},
+            {"order": 2, "text": "Tôi thích lên kế hoạch chi tiết trước khi thực hiện.", "scoring": '{"poles":["J"],"reverse":false}'},
+            {"order": 3, "text": "Tôi thích phân tích logic hơn là dựa vào cảm xúc.", "scoring": '{"poles":["T"],"reverse":false}'},
+            {"order": 4, "text": "Tôi thích quan sát và thu thập thông tin cụ thể.", "scoring": '{"poles":["S"],"reverse":false}'},
+            {"order": 5, "text": "Tôi thích suy nghĩ về tương lai và các khả năng.", "scoring": '{"poles":["N"],"reverse":false}'},
+            {"order": 6, "text": "Tôi thích linh hoạt, spontaneity hơn là theo lịch trình.", "scoring": '{"poles":["P"],"reverse":false}'},
+            {"order": 7, "text": "Tôi quyết định dựa trên giá trị và cảm xúc cá nhân.", "scoring": '{"poles":["F"],"reverse":false}'},
+            {"order": 8, "text": "Tôi thích học hỏi qua trải nghiệm thực tế.", "scoring": '{"poles":["S"],"reverse":false}'},
+            {"order": 9, "text": "Tôi thích suy nghĩ trừu tượng và lý thuyết.", "scoring": '{"poles":["N"],"reverse":false}'},
+            {"order": 10, "text": "Tôi thích hoàn thành công việc đúng hạn.", "scoring": '{"poles":["J"],"reverse":false}'},
+            {"order": 11, "text": "Tôi là người hướng ngoại, năng lượng đến từ giao tiếp.", "scoring": '{"poles":["E"],"reverse":false}'},
+            {"order": 12, "text": "Tôi thích linh hoạt thích nghi với hoàn cảnh thay vì kiểm soát.", "scoring": '{"poles":["P"],"reverse":false}'},
+        ],
+        "mi": [
+            {"order": 1, "text": "Tôi giỏi tư duy logic, giải toán và nhận ra các quy luật.", "scoring": '{"poles":["Logic-Toán học"],"reverse":false}'},
+            {"order": 2, "text": "Tôi có trí nhớ hình ảnh tốt, nhớ bằng hình ảnh hơn lời nói.", "scoring": '{"poles":["Không gian"],"reverse":false}'},
+            {"order": 3, "text": "Tôi nhạy cảm với âm thanh, giai điệu và nhịp điệu.", "scoring": '{"poles":["Âm nhạc"],"reverse":false}'},
+            {"order": 4, "text": "Tôi học tốt bằng cách chạm vào, làm thí nghiệm và vận động.", "scoring": '{"poles":["Thể chất"],"reverse":false}'},
+            {"order": 5, "text": "Tôi giỏi hiểu cảm xúc, động cơ của người khác.", "scoring": '{"poles":["Giao tiếp"],"reverse":false}'},
+            {"order": 6, "text": "Tôi có tư duy sắc sảo, nhìn thấy mối liên hệ và sự đối lập.", "scoring": '{"poles":["Tự nhiên"],"reverse":false}'},
+            {"order": 7, "text": "Tôi có khả năng kể chuyện, dùng từ ngữ hiệu quả.", "scoring": '{"poles":["Ngôn ngữ"],"reverse":false}'},
+            {"order": 8, "text": "Tôi giỏi nhìn tổng thể, tưởng tượng và sáng tạo.", "scoring": '{"poles":["Tồn tại"],"reverse":false}'},
+            {"order": 9, "text": "Tôi học tốt nhất qua việc nghe giảng và thảo luận.", "scoring": '{"poles":["Âm nhạc"],"reverse":false}'},
+            {"order": 10, "text": "Tôi giỏi vẽ, thiết kế và nắm bắt không gian 3D.", "scoring": '{"poles":["Không gian"],"reverse":false}'},
+            {"order": 11, "text": "Tôi giỏi lập kế hoạch, quản lý thời gian và tổ chức.", "scoring": '{"poles":["Logic-Toán học"],"reverse":false}'},
+            {"order": 12, "text": "Tôi hiểu sâu về thế giới tự nhiên và các hệ thống.", "scoring": '{"poles":["Tự nhiên"],"reverse":false}'},
+        ],
+    }
+    for _t, _qs in _Q_BANK.items():
+        for _q in _qs:
+            db.merge(TestQuestion(
+                test_type=_t, order=_q["order"], text=_q["text"],
+                scoring_json=_q["scoring"],
+            ))
     db.flush()
 
     # ---------- talent passport + certificates ----------
